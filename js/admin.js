@@ -48,10 +48,16 @@
       supabaseClient.from('network_changes'    ).select('*').order('created_at', { ascending: false }),
       supabaseClient.from('shipping_status'    ).select('*').order('created_at', { ascending: false })
     ]);
-    // 같은 팀/지역이 여러 번 제출한 경우 최신 응답만 유지 (created_at desc 정렬 상태에서 첫 등장만 채택)
-    // DB 원본은 그대로 두고 화면 표시 & 엑셀 다운로드만 dedup
-    allData.domestic = dedupLatest(d1.data || [], r => `${r.survey_year}|${r.company}|${r.division}|${r.team}`);
-    allData.overseas = dedupLatest(d2.data || [], r => `${r.survey_year}|${r.company}|${r.country}|${r.region}`);
+    // 국내/해외 수량은 현재 조사년도(SURVEY_YEAR)만 표시. 이전 연도는 "과거 신청 수량" 모달용 히스토리로만 유지.
+    // 같은 팀/지역이 여러 번 제출한 경우 최신 응답만 표시 (dedup은 화면 표시용 — DB 원본은 그대로).
+    allData.domestic = dedupLatest(
+      (d1.data || []).filter(r => r.survey_year === SURVEY_YEAR),
+      r => `${r.company}|${r.division}|${r.team}`
+    );
+    allData.overseas = dedupLatest(
+      (d2.data || []).filter(r => r.survey_year === SURVEY_YEAR),
+      r => `${r.company}|${r.country}|${r.region}`
+    );
     allData.detail   = d3.data || [];
     allData.holiday  = d4.data || [];
     allData.network  = d5.data || [];

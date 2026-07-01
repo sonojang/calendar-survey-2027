@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>달력 배송 상황 | 2027 달력 조사</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div>
+    <h1 data-i18n="ship.title">달력 배송 상황</h1>
+    <div class="subtitle" data-i18n="ship.subtitle">총무팀 발송 등록 · 신청자 조회</div>
+  </div>
+  <nav>
+    <a href="index.html" data-i18n="nav.home">← 홈</a>
+  </nav>
+</header>
+
+<div class="container">
+
+  <div class="card">
+
+    <div class="tabs">
+      <button class="tab active" data-tab="status" data-i18n="ship.tab_status">📋 배송 현황 조회 (신청자)</button>
+      <button class="tab" data-tab="ship" data-i18n="ship.tab_ship">📤 발송 등록 (발송담당)</button>
+    </div>
+
+    <!-- =========================================================== -->
+    <!-- 배송 현황 조회                                                -->
+    <!-- =========================================================== -->
+    <div class="tab-panel active" id="panel-status">
+      <div class="scope-toggle" role="tablist">
+        <button type="button" class="scope-btn active" data-scope="overseas" data-target="status" data-i18n="ship.scope_overseas">🌏 해외 배송 조회</button>
+        <button type="button" class="scope-btn" data-scope="domestic" data-target="status" data-i18n="ship.scope_domestic">🇰🇷 국내 배송 조회</button>
+      </div>
+
+      <!-- 해외 조회 -->
+      <div class="scope-panel active" data-scope-panel="status-overseas">
+        <p class="desc" data-i18n="ship.status_desc">달력이 등록된 신청 지역별로 출발/도착 예정과 선박 정보를 확인할 수 있습니다.</p>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; align-items:end">
+          <div class="form-group" style="min-width:200px">
+            <label data-i18n="ship.filter_company">회사 필터</label>
+            <select id="filter-company">
+              <option value="" data-i18n="common.all">전체</option>
+              <option>장금상선</option>
+              <option>흥아라인</option>
+            </select>
+          </div>
+          <div class="form-group" style="min-width:200px">
+            <label data-i18n="ship.filter_country">국가 필터</label>
+            <select id="filter-country">
+              <option value="" data-i18n="common.all">전체</option>
+            </select>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" id="status-refresh" style="margin-bottom:0" data-i18n="common.refresh">⟳ 새로고침</button>
+        </div>
+
+        <div class="table-wrap"><table id="status-table"></table></div>
+      </div>
+
+      <!-- 국내 조회 -->
+      <div class="scope-panel" data-scope-panel="status-domestic">
+        <p class="desc" data-i18n="ship.status_dom_desc">국내 본부/팀별로 도착예정일, 부수, 배송기사 연락처를 확인할 수 있습니다.</p>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; align-items:end">
+          <div class="form-group" style="min-width:200px">
+            <label data-i18n="ship.filter_company">회사 필터</label>
+            <select id="dom-filter-company">
+              <option value="" data-i18n="common.all">전체</option>
+              <option>장금상선</option>
+              <option>흥아라인</option>
+            </select>
+          </div>
+          <div class="form-group" style="min-width:200px">
+            <label data-i18n="ship.filter_division">본부 필터</label>
+            <select id="dom-filter-division">
+              <option value="" data-i18n="common.all">전체</option>
+            </select>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" id="dom-status-refresh" style="margin-bottom:0" data-i18n="common.refresh">⟳ 새로고침</button>
+        </div>
+
+        <div class="table-wrap"><table id="dom-status-table"></table></div>
+      </div>
+    </div>
+
+    <!-- =========================================================== -->
+    <!-- 발송 등록                                                     -->
+    <!-- =========================================================== -->
+    <div class="tab-panel" id="panel-ship">
+      <div class="scope-toggle" role="tablist">
+        <button type="button" class="scope-btn active" data-scope="overseas" data-target="ship" data-i18n="ship.scope_overseas_reg">🌏 해외 발송 등록</button>
+        <button type="button" class="scope-btn" data-scope="domestic" data-target="ship" data-i18n="ship.scope_domestic_reg">🇰🇷 국내 발송 등록</button>
+      </div>
+
+      <!-- 등록자 정보 (국내·해외 공통) -->
+      <div class="card" style="background:#f7f9fc; box-shadow:none; padding:14px; margin-bottom:16px">
+        <h3 style="margin:0 0 8px; font-size:14px; color:var(--primary)" data-i18n="ship.submitter_h">등록자 정보</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label><span data-i18n="common.name">이름</span> <span class="req">*</span></label>
+            <input id="submitter_name" type="text" required>
+          </div>
+          <div class="form-group">
+            <label data-i18n="common.email">이메일</label>
+            <input id="submitter_email" type="email" placeholder="@sinokor.co.kr">
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label data-i18n="common.dept">소속 / 부서</label>
+            <input id="submitter_office" type="text" data-i18n-placeholder="common.dept_ph" placeholder="예: 총무팀">
+          </div>
+        </div>
+      </div>
+
+      <!-- 해외 등록 -->
+      <div class="scope-panel active" data-scope-panel="ship-overseas">
+        <p class="desc" data-i18n="ship.ship_desc">
+          총무팀에서 신청 지역별로 발송 정보를 등록합니다.
+          해외 신청건은 아래 리스트에서 "+ 발송 등록" 버튼으로 끌어오세요.
+        </p>
+
+        <div class="card" style="background:#fff8e1; box-shadow:none; padding:14px; margin-bottom:16px; border:1px solid #ffe082">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
+            <h3 style="margin:0; font-size:14px; color:var(--primary)" data-i18n="ship.picker_h">📥 해외 신청건에서 가져오기</h3>
+            <div style="display:flex; gap:6px">
+              <input id="overseas-search" type="text" data-i18n-placeholder="ship.picker_search_ph" placeholder="국가/지역/담당자 검색"
+                     style="padding:6px 8px; font-size:13px; border:1px solid #ddd; border-radius:4px; width:200px">
+              <button type="button" class="btn btn-secondary btn-sm" id="overseas-refresh" style="margin:0" data-i18n="common.refresh">⟳ 새로고침</button>
+            </div>
+          </div>
+          <div class="table-wrap" style="max-height:300px; overflow-y:auto">
+            <table id="overseas-pick-table" style="font-size:13px"></table>
+          </div>
+        </div>
+
+        <form id="ship-form">
+          <div id="ship-rows"></div>
+          <button type="button" class="add-row-btn" id="ship-add" data-i18n="ship.add_row">+ 발송 건 추가</button>
+
+          <div id="ship-msg"></div>
+          <button class="btn btn-primary btn-block" type="submit" id="ship-submit" style="margin-top:12px" data-i18n="ship.submit_all">전체 등록</button>
+        </form>
+      </div>
+
+      <!-- 국내 등록 -->
+      <div class="scope-panel" data-scope-panel="ship-domestic">
+        <p class="desc" data-i18n="ship.ship_dom_desc">
+          국내 본부/팀별로 도착예정일, 부수, 배송기사 연락처를 등록합니다.
+          국내 신청건은 아래 리스트에서 "+ 발송 등록" 버튼으로 끌어오세요.
+        </p>
+
+        <div class="card" style="background:#fff8e1; box-shadow:none; padding:14px; margin-bottom:16px; border:1px solid #ffe082">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
+            <h3 style="margin:0; font-size:14px; color:var(--primary)" data-i18n="ship.picker_dom_h">📥 국내 신청건에서 가져오기</h3>
+            <div style="display:flex; gap:6px">
+              <input id="domestic-search" type="text" data-i18n-placeholder="ship.picker_dom_search_ph" placeholder="회사/본부/팀/담당자 검색"
+                     style="padding:6px 8px; font-size:13px; border:1px solid #ddd; border-radius:4px; width:240px">
+              <button type="button" class="btn btn-secondary btn-sm" id="domestic-refresh" style="margin:0" data-i18n="common.refresh">⟳ 새로고침</button>
+            </div>
+          </div>
+          <div class="table-wrap" style="max-height:300px; overflow-y:auto">
+            <table id="domestic-pick-table" style="font-size:13px"></table>
+          </div>
+        </div>
+
+        <form id="dom-ship-form">
+          <div id="dom-ship-rows"></div>
+          <button type="button" class="add-row-btn" id="dom-ship-add" data-i18n="ship.add_row">+ 발송 건 추가</button>
+
+          <div id="dom-ship-msg"></div>
+          <button class="btn btn-primary btn-block" type="submit" id="dom-ship-submit" style="margin-top:12px" data-i18n="ship.submit_all">전체 등록</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="site-footer" data-i18n="common.copyright">
+  © 시노코 그룹 총무팀 · 2027년 달력 제작 조사
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/shipping-status.js"></script>
+</body>
+</html>

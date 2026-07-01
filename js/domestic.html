@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>국내 달력 신청 | 2027 달력 조사</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div>
+    <h1 data-i18n="dom.title">국내 달력 신청</h1>
+    <div class="subtitle" data-i18n="dom.subtitle">장금상선B + 흥아라인B (홍콩국기 포함)</div>
+  </div>
+  <nav>
+    <a href="index.html" data-i18n="nav.home">← 홈</a>
+  </nav>
+</header>
+
+<div class="container narrow">
+
+  <div class="card">
+    <h2 data-i18n="dom.guide_h">입력 안내</h2>
+    <p class="desc" data-i18n="dom.guide_p">
+      소속회사 → 본부 → 팀을 차례로 선택하고 2027년에 필요한
+      <b>장금상선B</b> · <b>흥아라인B</b> 수량을 입력해 주세요.
+    </p>
+
+    <div class="alert alert-warning" data-i18n="dom.warn">
+      <b>국내 팀장</b>은 <span class="cal-type-badge cal-type-B">B버전 (홍콩국기 포함)</span>만 신청합니다.
+      A버전(홍콩국기 제외)은 중국 지역 전용입니다.
+    </div>
+
+    <form id="domestic-form">
+
+      <div class="section-title" data-i18n="dom.sec_org">소속</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label><span data-i18n="dom.company">소속회사</span> <span class="req">*</span></label>
+          <select id="company" required>
+            <option value="" data-i18n="common.select">선택하세요</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label><span data-i18n="dom.division">본부/사무소</span> <span class="req">*</span></label>
+          <select id="division" required disabled>
+            <option value="" data-i18n="common.first_select_div">먼저 회사를 선택하세요</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label><span data-i18n="dom.team">팀/구분</span> <span class="req">*</span></label>
+          <select id="team" required disabled>
+            <option value="" data-i18n="common.first_select_team">먼저 본부를 선택하세요</option>
+          </select>
+        </div>
+        <div class="form-group"></div>
+      </div>
+
+      <div class="section-title" data-i18n="dom.sec_submitter">입력자 정보</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label><span data-i18n="dom.submitter_name">입력자 이름</span> <span class="req">*</span></label>
+          <input id="submitter_name" type="text" required>
+        </div>
+        <div class="form-group">
+          <label data-i18n="dom.submitter_email">입력자 이메일</label>
+          <input id="submitter_email" type="email" placeholder="@sinokor.co.kr">
+        </div>
+      </div>
+
+      <div class="section-title with-btn">
+        <span data-i18n="dom.sec_qty">신청 수량 (2027년)</span>
+        <button type="button" class="btn-history" data-history-scope="domestic" data-i18n="common.btn_history">📄 과거 신청 수량</button>
+      </div>
+      <div class="box-hint" data-i18n="common.box_hint">- 수량 단위는 1BOX(25부) 기준 입니다.</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label><span data-i18n="dom.qty_jangkum">장금상선B 수량</span> <span class="req">*</span></label>
+          <input id="jangkum_b_qty" type="number" min="0" value="0" required>
+          <div class="hint" data-i18n="dom.hint_hk">홍콩국기 포함</div>
+        </div>
+        <div class="form-group">
+          <label><span data-i18n="dom.qty_heunga">흥아라인B 수량</span> <span class="req">*</span></label>
+          <input id="heunga_b_qty" type="number" min="0" value="0" required>
+          <div class="hint" data-i18n="dom.hint_hk">홍콩국기 포함</div>
+        </div>
+      </div>
+
+      <div class="form-row full">
+        <div class="form-group">
+          <label data-i18n="common.note">비고</label>
+          <textarea id="note" data-i18n-placeholder="dom.note_ph" placeholder="특이사항이 있으면 적어주세요"></textarea>
+        </div>
+      </div>
+
+      <div id="msg-area"></div>
+
+      <button class="btn btn-primary btn-block" type="submit" id="submit-btn" data-i18n="common.submit">제출하기</button>
+    </form>
+  </div>
+
+</div>
+
+<footer class="site-footer" data-i18n="common.copyright">
+  © 시노코 그룹 총무팀 · 2027년 달력 제작 조사
+</footer>
+
+<!-- 과거 신청 수량 모달 -->
+<div id="history-modal" class="history-modal">
+  <div class="history-modal-box">
+    <div class="history-modal-head">
+      <h3>과거 신청 수량</h3>
+      <div class="year-select">
+        <label for="history-year" data-i18n="history.year">연도</label>
+        <select id="history-year"></select>
+      </div>
+      <button class="history-modal-close" type="button" aria-label="닫기">×</button>
+    </div>
+    <div class="history-modal-body"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/domestic.js"></script>
+<script src="js/history-modal.js"></script>
+</body>
+</html>

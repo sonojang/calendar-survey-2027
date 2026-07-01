@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>해외사무소 달력 신청 | 2027 달력 조사</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div>
+    <h1 data-i18n="ovr.title">해외사무소 달력 신청</h1>
+    <div class="subtitle" data-i18n="ovr.subtitle">국가/지역별 수량·배송정보 · 세부포트 · 공휴일 · 네트워크 변경</div>
+  </div>
+  <nav>
+    <a href="index.html" data-i18n="nav.home">← 홈</a>
+  </nav>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h2 data-i18n="ovr.submitter_h">입력자 정보</h2>
+    <p class="desc" data-i18n="ovr.submitter_p">모든 탭에 공통으로 적용됩니다. 먼저 입력해 주세요.</p>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label><span data-i18n="ovr.submitter_company">소속회사</span> <span class="req">*</span></label>
+        <select id="submitter_company" required>
+          <option value="" data-i18n="common.select">선택하세요</option>
+        </select>
+      </div>
+      <div class="form-group"></div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label><span data-i18n="ovr.branch_country">해외법인 국가</span> <span class="req">*</span></label>
+        <select id="submitter_branch_country" required></select>
+        <input id="submitter_branch_country_custom" type="text" style="display:none; margin-top:6px"
+               data-i18n-placeholder="ovr.branch_country_ph" placeholder="국가명을 직접 입력하세요">
+      </div>
+      <div class="form-group">
+        <label><span data-i18n="ovr.branch_region">해외법인 지역/사무소</span> <span class="req">*</span></label>
+        <select id="submitter_branch_region" required disabled>
+          <option value="" data-i18n="common.first_select_country">먼저 국가를 선택하세요</option>
+        </select>
+        <input id="submitter_branch_region_custom" type="text" style="display:none; margin-top:6px"
+               data-i18n-placeholder="ovr.branch_region_ph" placeholder="지역/사무소명을 직접 입력하세요">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label><span data-i18n="common.name">이름</span> <span class="req">*</span></label>
+        <input id="submitter_name" type="text" required>
+      </div>
+      <div class="form-group">
+        <label data-i18n="common.email">이메일</label>
+        <input id="submitter_email" type="email" placeholder="@sinokor.co.kr">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+
+    <div class="tabs">
+      <button class="tab active" data-tab="qty" data-i18n="ovr.tab_qty">① 수량·배송정보</button>
+      <button class="tab" data-tab="detail" data-i18n="ovr.tab_detail">② 세부포트</button>
+      <button class="tab" data-tab="holiday" data-i18n="ovr.tab_holiday">③ 다음년도 공휴일</button>
+      <button class="tab" data-tab="network" data-i18n="ovr.tab_network">④ 네트워크 변경</button>
+    </div>
+
+    <!-- =========================================================== -->
+    <!-- ① 수량·배송정보 (시트2)                                       -->
+    <!-- =========================================================== -->
+    <div class="tab-panel active" id="panel-qty">
+      <h2 style="margin-top:0" data-i18n="ovr.qty_h">① 국가/지역별 수량 및 배송정보</h2>
+      <div class="alert alert-info" data-i18n="ovr.qty_info">
+        <b>중국</b>은 <span class="cal-type-badge cal-type-A">A버전 (홍콩국기 없음)</span>,
+        그 외 국가는 <span class="cal-type-badge cal-type-B">B버전 (홍콩국기 있음)</span>으로 자동 설정됩니다.<br>
+        변경시 총무팀에 문의해 주세요.
+      </div>
+
+      <form id="qty-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label><span data-i18n="ovr.qty_company">신청 달력 회사</span> <span class="req">*</span></label>
+            <select id="qty-company" required>
+              <option value="" data-i18n="common.select">선택하세요</option>
+              <option value="장금상선" data-i18n="ovr.qty_company_jk">장금상선 달력</option>
+              <option value="흥아라인" data-i18n="ovr.qty_company_ha">흥아라인 달력</option>
+            </select>
+          </div>
+          <div class="form-group"></div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label><span data-i18n="common.country">국가</span> <span class="req">*</span></label>
+            <select id="qty-country" required></select>
+            <input id="qty-country-custom" type="text" style="display:none; margin-top:6px"
+                   data-i18n-placeholder="ovr.qty_country_ph" placeholder="국가명을 직접 입력하세요 (예: 캄보디아)">
+          </div>
+          <div class="form-group">
+            <label><span data-i18n="common.region">지역</span> <span class="req">*</span></label>
+            <select id="qty-region" required disabled>
+              <option value="" data-i18n="common.first_select_country">먼저 국가를 선택하세요</option>
+            </select>
+            <input id="qty-region-custom" type="text" style="display:none; margin-top:6px"
+                   data-i18n-placeholder="ovr.qty_region_ph" placeholder="지역명을 직접 입력하세요 (예: 프놈펜)">
+          </div>
+        </div>
+
+        <div class="form-row" id="row-custom-caltype" style="display:none">
+          <div class="form-group">
+            <label><span data-i18n="ovr.qty_caltype">달력 종류</span> <span class="req">*</span></label>
+            <select id="qty-custom-caltype">
+              <option value="B" data-i18n="ovr.qty_caltype_b">B버전 (홍콩국기 있음) — 중국 외 지역</option>
+              <option value="A" data-i18n="ovr.qty_caltype_a">A버전 (홍콩국기 없음) — 중국 지역</option>
+            </select>
+            <div class="hint" data-i18n="ovr.qty_caltype_hint">직접 입력 지역의 달력 종류를 선택해 주세요</div>
+          </div>
+          <div class="form-group"></div>
+        </div>
+
+        <div id="qty-cal-info" style="display:none; margin-bottom:14px"></div>
+
+        <div class="section-title sub with-btn">
+          <span data-i18n="ovr.qty_qty_sec">수량 (부)</span>
+          <button type="button" class="btn-history" data-history-scope="overseas" data-i18n="common.btn_history">📄 과거 신청 수량</button>
+        </div>
+        <div class="box-hint" data-i18n="common.box_hint">- 수량 단위는 1BOX(25부) 기준 입니다.</div>
+        <div class="alert alert-warning" id="qty-company-hint" data-i18n="ovr.qty_company_hint">
+          👆 <b>신청 달력 회사</b>를 먼저 선택해 주세요. 회사 선택 후 해당 회사의 수량 입력이 활성화됩니다.
+        </div>
+        <div class="form-row" id="row-jangkum">
+          <div class="form-group">
+            <label data-i18n="ovr.qty_jangkum">장금 수량</label>
+            <input id="qty-jangkum" type="number" min="0" value="0" disabled>
+          </div>
+          <div class="form-group">
+            <label data-i18n="ovr.qty_yjc_jangkum">YJC 장금 수량</label>
+            <input id="qty-yjc-jangkum" type="number" min="0" value="0" disabled>
+          </div>
+        </div>
+        <div class="form-row" id="row-heunga">
+          <div class="form-group">
+            <label data-i18n="ovr.qty_heunga">흥아 수량</label>
+            <input id="qty-heunga" type="number" min="0" value="0" disabled>
+          </div>
+          <div class="form-group">
+            <label data-i18n="ovr.qty_yjc_heunga">YJC 흥아 수량</label>
+            <input id="qty-yjc-heunga" type="number" min="0" value="0" disabled>
+          </div>
+        </div>
+
+        <div class="section-title sub" data-i18n="ovr.qty_shipping_sec">배송 정보</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label data-i18n="ovr.qty_shipping_method">배송방법</label>
+            <select id="qty-shipping-method">
+              <option value="" data-i18n="common.select">선택하세요</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label data-i18n="ovr.qty_port_code">Port Code</label>
+            <input id="qty-port-code" type="text" placeholder="예: CNSHA">
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label data-i18n="ovr.qty_address">배송주소 (실제 배송받을 주소)</label>
+            <textarea id="qty-address" data-i18n-placeholder="ovr.qty_address_ph" placeholder="번지 / 건물명 / 우편번호 포함"></textarea>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label data-i18n="ovr.qty_pic_name">담당자 이름</label>
+            <input id="qty-pic-name" type="text">
+          </div>
+          <div class="form-group">
+            <label data-i18n="ovr.qty_pic_contact">담당자 연락처</label>
+            <input id="qty-pic-contact" type="text" data-i18n-placeholder="ovr.qty_pic_contact_ph" placeholder="전화 / 이메일">
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label data-i18n="common.note_special">비고(특이사항)</label>
+            <textarea id="qty-note"></textarea>
+          </div>
+        </div>
+
+        <div id="qty-msg"></div>
+        <button class="btn btn-primary btn-block" type="submit" id="qty-submit" data-i18n="common.submit">제출하기</button>
+      </form>
+    </div>
+
+    <!-- =========================================================== -->
+    <!-- ② 세부포트 (시트3)                                            -->
+    <!-- =========================================================== -->
+    <div class="tab-panel" id="panel-detail">
+      <h2 style="margin-top:0" data-i18n="ovr.detail_h">② 세부 포트별 분산 배송</h2>
+      <p class="desc" data-i18n="ovr.detail_p">
+        하나의 국가 안에서 여러 지점/지역으로 분산 배송받는 경우 (예: 일본의 도쿄/오사카/하카타…) 사용합니다.
+        엑셀 양식을 다운로드 받아 작성 후 업로드하거나, 아래에서 직접 행 추가 가능합니다.
+      </p>
+
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px">
+        <button type="button" class="btn btn-secondary btn-sm" id="detail-template" data-i18n="ovr.tpl_download">📥 엑셀 양식 다운로드</button>
+        <label class="btn btn-secondary btn-sm" style="cursor:pointer; display:inline-flex; align-items:center; margin:0">
+          <span data-i18n="ovr.tpl_upload">📤 작성한 엑셀 업로드</span>
+          <input type="file" id="detail-upload" accept=".xlsx,.xls" style="display:none">
+        </label>
+      </div>
+
+      <form id="detail-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label><span data-i18n="common.country">국가</span> <span class="req">*</span></label>
+            <input id="detail-country" type="text" data-i18n-placeholder="ovr.detail_country_ph" placeholder="예: JAPAN" required>
+          </div>
+        </div>
+
+        <div id="detail-rows"></div>
+        <button type="button" class="add-row-btn" id="detail-add" data-i18n="common.add_row">+ 행 추가</button>
+
+        <div id="detail-msg"></div>
+        <button class="btn btn-primary btn-block" type="submit" id="detail-submit" style="margin-top:12px" data-i18n="common.submit_all">전체 제출</button>
+      </form>
+    </div>
+
+    <!-- =========================================================== -->
+    <!-- ③ 다음년도 공휴일 (시트4)                                      -->
+    <!-- =========================================================== -->
+    <div class="tab-panel" id="panel-holiday">
+      <h2 style="margin-top:0" data-i18n="ovr.holiday_h">③ 2027년 공휴일</h2>
+      <p class="desc" data-i18n="ovr.holiday_p">
+        담당 국가의 2027년 공휴일을 영어 명칭으로 작성합니다.
+        엑셀 양식을 다운로드 받아 작성 후 업로드하거나, 아래에서 직접 행 추가 가능합니다.
+      </p>
+
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px">
+        <button type="button" class="btn btn-secondary btn-sm" id="holiday-template" data-i18n="ovr.tpl_download">📥 엑셀 양식 다운로드</button>
+        <label class="btn btn-secondary btn-sm" style="cursor:pointer; display:inline-flex; align-items:center; margin:0">
+          <span data-i18n="ovr.tpl_upload">📤 작성한 엑셀 업로드</span>
+          <input type="file" id="holiday-upload" accept=".xlsx,.xls" style="display:none">
+        </label>
+      </div>
+
+      <form id="holiday-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label><span data-i18n="common.country">국가</span> <span class="req">*</span></label>
+            <input id="holiday-country" type="text" data-i18n-placeholder="ovr.holiday_country_ph" placeholder="예: CHINA, RUSSIA, JAPAN" required>
+          </div>
+        </div>
+
+        <div id="holiday-rows"></div>
+        <button type="button" class="add-row-btn" id="holiday-add" data-i18n="ovr.holiday_add">+ 공휴일 추가</button>
+
+        <div id="holiday-msg"></div>
+        <button class="btn btn-primary btn-block" type="submit" id="holiday-submit" style="margin-top:12px" data-i18n="common.submit_all">전체 제출</button>
+      </form>
+    </div>
+
+    <!-- =========================================================== -->
+    <!-- ④ 네트워크 변경사항                                            -->
+    <!-- =========================================================== -->
+    <div class="tab-panel" id="panel-network">
+      <h2 style="margin-top:0" data-i18n="ovr.network_h">④ 달력 네트워크 페이지 변경사항</h2>
+      <p class="desc" data-i18n="ovr.network_p">
+        달력 마지막 네트워크 페이지에서 <b>전년도(2026) 대비 변경된 항목만</b> 입력해 주세요.
+        주소·연락처·팩스·이메일·PIC 등이 동일하면 입력 불필요합니다.
+      </p>
+
+      <!-- 현재 네트워크 페이지 미리보기 -->
+      <div class="network-preview">
+        <div class="network-preview-head">
+          <h3 data-i18n="ovr.network_image_h">📋 현재 네트워크 페이지 (A·B형 동일)</h3>
+          <div class="network-preview-actions">
+            <button type="button" class="btn btn-secondary btn-sm" id="network-image-zoom" data-i18n="ovr.network_image_zoom">🔍 크게 보기</button>
+            <a class="btn btn-secondary btn-sm" href="assets/network-jangkum.jpg" download id="network-image-download" data-i18n="ovr.network_image_download">📥 원본 다운로드</a>
+          </div>
+        </div>
+        <p class="desc" data-i18n="ovr.network_image_desc">
+          현재 달력에 들어가있는 네트워크 정보입니다. 본인 담당 지역과 다른 부분만 아래에 추가해 주세요. (이미지 클릭시 확대)
+        </p>
+        <div class="network-company-toggle" role="tablist">
+          <button type="button" class="network-company-btn active" data-network-company="jangkum" data-i18n="ovr.network_pick_jangkum">장금상선 네트워크</button>
+          <button type="button" class="network-company-btn" data-network-company="heunga" data-i18n="ovr.network_pick_heunga">흥아라인 네트워크</button>
+        </div>
+        <div class="network-image-wrap">
+          <img src="assets/network-jangkum.jpg" alt="SINOKOR Networks" id="network-current-image" loading="lazy">
+        </div>
+      </div>
+
+      <!-- 이미지 확대 모달 -->
+      <div id="network-image-modal" class="image-modal" style="display:none">
+        <span class="image-modal-close" id="network-image-close">×</span>
+        <img class="image-modal-content" src="assets/network-jangkum.jpg" alt="SINOKOR Networks (zoom)" id="network-image-modal-img">
+      </div>
+
+      <form id="network-form">
+        <div id="network-rows"></div>
+        <button type="button" class="add-row-btn" id="network-add" data-i18n="ovr.network_add">+ 변경 항목 추가</button>
+
+        <div id="network-msg"></div>
+        <button class="btn btn-primary btn-block" type="submit" id="network-submit" style="margin-top:12px" data-i18n="common.submit_all">전체 제출</button>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<footer class="site-footer" data-i18n="common.copyright">
+  © 시노코 그룹 총무팀 · 2027년 달력 제작 조사
+</footer>
+
+<!-- 과거 신청 수량 모달 -->
+<div id="history-modal" class="history-modal">
+  <div class="history-modal-box">
+    <div class="history-modal-head">
+      <h3>과거 신청 수량</h3>
+      <div class="year-select">
+        <label for="history-year" data-i18n="history.year">연도</label>
+        <select id="history-year"></select>
+      </div>
+      <button class="history-modal-close" type="button" aria-label="닫기">×</button>
+    </div>
+    <div class="history-modal-body"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/overseas.js"></script>
+<script src="js/history-modal.js"></script>
+</body>
+</html>

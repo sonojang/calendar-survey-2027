@@ -28,6 +28,17 @@
     shipping: []
   };
 
+  // 같은 키의 여러 응답 중 첫 등장(=이미 created_at desc로 정렬돼 있어 최신)만 유지
+  function dedupLatest(arr, keyFn) {
+    const seen = new Set();
+    return arr.filter(r => {
+      const k = keyFn(r);
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  }
+
   async function loadAll() {
     const [d1, d2, d3, d4, d5, d6] = await Promise.all([
       supabaseClient.from('domestic_quantities').select('*').order('created_at', { ascending: false }),
@@ -37,8 +48,10 @@
       supabaseClient.from('network_changes'    ).select('*').order('created_at', { ascending: false }),
       supabaseClient.from('shipping_status'    ).select('*').order('created_at', { ascending: false })
     ]);
-    allData.domestic = d1.data || [];
-    allData.overseas = d2.data || [];
+    // 같은 팀/지역이 여러 번 제출한 경우 최신 응답만 유지 (created_at desc 정렬 상태에서 첫 등장만 채택)
+    // DB 원본은 그대로 두고 화면 표시 & 엑셀 다운로드만 dedup
+    allData.domestic = dedupLatest(d1.data || [], r => `${r.survey_year}|${r.company}|${r.division}|${r.team}`);
+    allData.overseas = dedupLatest(d2.data || [], r => `${r.survey_year}|${r.company}|${r.country}|${r.region}`);
     allData.detail   = d3.data || [];
     allData.holiday  = d4.data || [];
     allData.network  = d5.data || [];

@@ -121,7 +121,11 @@ insert into overseas_quantities
      '690106, Russia, Vladivostok, Krasnogo Znameni avenue 3, Ignat business centre, 9 floor, office 10',
      'RUVVO', 'Mr.Konstantin', '+7(423)2795786', '시스템 적재'),
 
-  -- 마스터에 없는 신규 지역 (히스토리만 보존)
-  (2026, NULL,       '중국', '샨토우',  'A',   25,   25,    0,    0,  '현재 선박으로 불가능, 택배 가능',  NULL,
+  -- 대리점 지역 (수량 있음 / 없음 혼재)
+  (2026, NULL,       '샨토우', '대리점',  'A',   25,   25,    0,    0,  '현재 선박으로 불가능, 택배 가능',  NULL,
      'Room 606, Building 10, Longguang Century Business Center, No.115 Haibin Road, Shantou, Guangdong, China',
-     '515041', 'MS. Betty Huang', '86-754-88994611, 137-2650-9456', '시스템 적재');
+     '515041', 'MS. Betty Huang', '86-754-88994611, 137-2650-9456', '시스템 적재'),
+
+  (2026, NULL,       '치타공',   '대리점', 'B',    0,    0,    0,    0,  NULL, '2026년 신청 수량 없음', NULL, 'BDCGP', NULL, NULL, '시스템 적재'),
+  (2026, NULL,       '미얀마',   '대리점', 'B',    0,    0,    0,    0,  NULL, '2026년 신청 수량 없음', NULL, 'MMRGN', NULL, NULL, '시스템 적재'),
+  (2026, NULL,       '캄보디아', '대리점', 'B',    0,    0,    0,    0,  NULL, '2026년 신청 수량 없음', NULL, 'KHPNH', NULL, NULL, '시스템 적재');

@@ -101,7 +101,11 @@ const OVERSEAS_REGIONS = [
   { country: '필리핀',     region: '대리점',   port_code: 'PHMNL', calendar_type: 'B' },
   { country: '파키스탄',   region: '대리점',   port_code: 'PKKHI', calendar_type: 'B' },
   { country: '러시아',     region: '블라디',   port_code: 'RUVVO', calendar_type: 'B' },
-  { country: '대만',       region: '대리점',   port_code: 'TWKEL & KHH', calendar_type: 'B' }
+  { country: '대만',       region: '대리점',   port_code: 'TWKEL & KHH', calendar_type: 'B' },
+  { country: '치타공',     region: '대리점',   port_code: 'BDCGP', calendar_type: 'B' },
+  { country: '샨토우',     region: '대리점',   port_code: '515041', calendar_type: 'A' },
+  { country: '미얀마',     region: '대리점',   port_code: 'MMRGN', calendar_type: 'B' },
+  { country: '캄보디아',   region: '대리점',   port_code: 'KHPNH', calendar_type: 'B' }
 ];
 
 // 일본 세부 포트 코드 (참고용)
@@ -224,7 +228,11 @@ const I18N_LOOKUP = {
     '필리핀':     'PHILIPPINES',
     '파키스탄':   'PAKISTAN',
     '러시아':     'RUSSIA',
-    '대만':       'TAIWAN'
+    '대만':       'TAIWAN',
+    '치타공':     'CHITTAGONG',
+    '샨토우':     'SHANTOU',
+    '미얀마':     'MYANMAR',
+    '캄보디아':   'CAMBODIA'
   },
   region: {
     '상해':       'SHANGHAI',

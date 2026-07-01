@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>관리자 | 2027 달력 조사</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div>
+    <h1 data-i18n="adm.title">관리자 — 2027 달력 조사 응답 관리</h1>
+    <div class="subtitle" id="user-email" data-i18n="adm.subtitle_guest">로그인 필요</div>
+  </div>
+  <nav>
+    <a href="index.html" data-i18n="nav.home">← 홈</a>
+    <a href="#" id="change-pw-btn" style="display:none" data-i18n="nav.change_pw">🔑 비밀번호 변경</a>
+    <a href="#" id="logout-btn" style="display:none" data-i18n="nav.logout">로그아웃</a>
+  </nav>
+</header>
+
+<!-- 비밀번호 변경 모달 -->
+<div id="pw-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center">
+  <div class="card" style="max-width:420px; width:90%; margin:0">
+    <h3 style="margin:0 0 12px" data-i18n="adm.pw_h">🔑 비밀번호 변경</h3>
+    <p class="desc" style="margin-bottom:14px" data-i18n="adm.pw_desc">새 비밀번호는 <b>8자 이상</b>이어야 합니다.</p>
+    <div class="form-row full">
+      <div class="form-group">
+        <label data-i18n="adm.pw_new">새 비밀번호</label>
+        <input id="pw-new" type="password" autocomplete="new-password">
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="form-group">
+        <label data-i18n="adm.pw_new2">새 비밀번호 확인</label>
+        <input id="pw-new2" type="password" autocomplete="new-password">
+      </div>
+    </div>
+    <div id="pw-msg"></div>
+    <div style="display:flex; gap:8px; margin-top:10px">
+      <button class="btn btn-primary" id="pw-submit" style="flex:1" data-i18n="common.change">변경</button>
+      <button class="btn btn-secondary" id="pw-cancel" style="flex:1" data-i18n="common.cancel">취소</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- 로그인 -->
+  <div class="card" id="login-card" style="max-width:440px; margin:40px auto">
+    <h2 data-i18n="adm.login_h">관리자 로그인</h2>
+    <p class="desc" data-i18n="adm.login_p">총무팀 담당자 이메일(<b>sonojang@sinokor.co.kr</b>)로 로그인합니다.<br>
+      로그인 후 우측 상단에서 비밀번호를 변경할 수 있습니다.</p>
+
+    <div class="form-row full">
+      <div class="form-group">
+        <label data-i18n="common.email">이메일</label>
+        <input id="login-email" type="email" value="sonojang@sinokor.co.kr">
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="form-group">
+        <label>비밀번호</label>
+        <input id="login-password" type="password">
+      </div>
+    </div>
+
+    <div id="login-msg"></div>
+
+    <button class="btn btn-primary btn-block" id="login-btn" data-i18n="adm.login_btn">로그인</button>
+    <button class="btn btn-secondary btn-block" id="reset-btn" style="margin-top:8px" data-i18n="adm.reset_btn">비밀번호 재설정 메일 받기</button>
+  </div>
+
+  <!-- 대시보드 -->
+  <div id="dashboard" style="display:none">
+
+    <!-- 네트워크 이미지 관리 -->
+    <div class="card" id="network-image-admin">
+      <h2 style="margin-top:0" data-i18n="adm.netimg_h">📷 네트워크 페이지 이미지 관리</h2>
+      <p class="desc" data-i18n="adm.netimg_p">
+        해외 주재원 ④번 탭에서 보여줄 <b>현재 달력의 네트워크 페이지 이미지</b>를 업로드합니다.
+        매년 조사 전 새 이미지로 교체하세요. 업로드 즉시 사이트에 반영됩니다.
+      </p>
+
+      <div class="netimg-grid">
+        <!-- 장금 -->
+        <div class="netimg-card">
+          <div class="netimg-card-head">
+            <h3 data-i18n="adm.netimg_jangkum">장금상선 네트워크</h3>
+            <span class="netimg-meta" id="netimg-meta-jangkum"></span>
+          </div>
+          <div class="netimg-preview-wrap">
+            <img id="netimg-preview-jangkum" alt="장금상선 네트워크" loading="lazy">
+            <div class="netimg-empty" id="netimg-empty-jangkum" data-i18n="adm.netimg_empty">아직 업로드된 이미지가 없습니다</div>
+          </div>
+          <div class="netimg-actions">
+            <label class="btn btn-secondary btn-sm" style="cursor:pointer; margin:0">
+              <span data-i18n="adm.netimg_pick">📁 파일 선택</span>
+              <input type="file" id="netimg-file-jangkum" accept="image/*" style="display:none">
+            </label>
+            <span class="netimg-filename" id="netimg-filename-jangkum"></span>
+            <button class="btn btn-primary btn-sm" id="netimg-upload-jangkum" disabled data-i18n="adm.netimg_upload">⬆️ 업로드</button>
+          </div>
+          <div id="netimg-msg-jangkum" class="netimg-msg"></div>
+        </div>
+
+        <!-- 흥아 -->
+        <div class="netimg-card">
+          <div class="netimg-card-head">
+            <h3 data-i18n="adm.netimg_heunga">흥아라인 네트워크</h3>
+            <span class="netimg-meta" id="netimg-meta-heunga"></span>
+          </div>
+          <div class="netimg-preview-wrap">
+            <img id="netimg-preview-heunga" alt="흥아라인 네트워크" loading="lazy">
+            <div class="netimg-empty" id="netimg-empty-heunga" data-i18n="adm.netimg_empty">아직 업로드된 이미지가 없습니다</div>
+          </div>
+          <div class="netimg-actions">
+            <label class="btn btn-secondary btn-sm" style="cursor:pointer; margin:0">
+              <span data-i18n="adm.netimg_pick">📁 파일 선택</span>
+              <input type="file" id="netimg-file-heunga" accept="image/*" style="display:none">
+            </label>
+            <span class="netimg-filename" id="netimg-filename-heunga"></span>
+            <button class="btn btn-primary btn-sm" id="netimg-upload-heunga" disabled data-i18n="adm.netimg_upload">⬆️ 업로드</button>
+          </div>
+          <div id="netimg-msg-heunga" class="netimg-msg"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tabs">
+        <button class="tab active" data-tab="domestic" data-i18n="adm.tab_dom">국내수량</button>
+        <button class="tab" data-tab="overseas" data-i18n="adm.tab_ovr">해외수량·배송</button>
+        <button class="tab" data-tab="detail" data-i18n="adm.tab_detail">세부포트</button>
+        <button class="tab" data-tab="holiday" data-i18n="adm.tab_holiday">해외휴일</button>
+        <button class="tab" data-tab="network" data-i18n="adm.tab_network">네트워크 변경</button>
+        <button class="tab" data-tab="shipping" data-i18n="adm.tab_ship">배송 상황</button>
+      </div>
+
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px">
+        <button class="btn btn-success btn-sm" id="refresh-btn" data-i18n="common.refresh">⟳ 새로고침</button>
+        <button class="btn btn-primary btn-sm" id="export-xlsx" data-i18n="adm.export_xlsx">📊 전체 엑셀 다운로드 (원본 양식)</button>
+        <button class="btn btn-secondary btn-sm" id="export-csv" data-i18n="adm.export_csv">📄 현재 탭 CSV 다운로드</button>
+        <button class="btn btn-danger btn-sm" id="network-report-jangkum" data-i18n="adm.report_jangkum">📕 장금 네트워크 변경사항 보고서</button>
+        <button class="btn btn-danger btn-sm" id="network-report-heunga" data-i18n="adm.report_heunga">📗 흥아 네트워크 변경사항 보고서</button>
+      </div>
+
+      <div id="stats-summary" style="margin-bottom:14px"></div>
+
+      <div class="tab-panel active" id="panel-domestic">
+        <div class="table-wrap"><table id="table-domestic"></table></div>
+      </div>
+      <div class="tab-panel" id="panel-overseas">
+        <div class="table-wrap"><table id="table-overseas"></table></div>
+      </div>
+      <div class="tab-panel" id="panel-detail">
+        <div class="table-wrap"><table id="table-detail"></table></div>
+      </div>
+      <div class="tab-panel" id="panel-holiday">
+        <div class="table-wrap"><table id="table-holiday"></table></div>
+      </div>
+      <div class="tab-panel" id="panel-network">
+        <div class="table-wrap"><table id="table-network"></table></div>
+      </div>
+      <div class="tab-panel" id="panel-shipping">
+        <div class="table-wrap"><table id="table-shipping"></table></div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<footer class="site-footer" data-i18n="common.copyright">
+  © 시노코 그룹 총무팀 · 2027년 달력 제작 조사
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

@@ -64,7 +64,17 @@ const DOMESTIC_ORG = {
     { division: '경영관리본부', team: '자금팀'        },
     { division: '경영관리본부', team: '기획팀'        },
     { division: '경영관리본부', team: '법무운영팀'    },
-    { division: '경영관리본부', team: '전산팀'        }
+    { division: '경영관리본부', team: '전산팀'        },
+    // 부산사무소
+    { division: '부산사무소',   team: '관리팀'        },
+    { division: '부산사무소',   team: '영업팀'        },
+    { division: '부산사무소',   team: '고객지원팀'    },
+    { division: '부산사무소',   team: '운항팀'        },
+    // 지방사무소
+    { division: '지방사무소',   team: '인천사무소'    },
+    { division: '지방사무소',   team: '평택사무소'    },
+    { division: '지방사무소',   team: '울산사무소'    },
+    { division: '지방사무소',   team: '광양사무소'    }
   ]
 
 };

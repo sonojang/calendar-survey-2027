@@ -13,7 +13,7 @@
     ko: {
       /* ---------- 공통 ---------- */
       'nav.home':              '← 홈',
-      'nav.admin':             '관리자',
+      'nav.admin':             '📊 전체 조회',
       'nav.logout':            '로그아웃',
       'nav.change_pw':         '🔑 비밀번호 변경',
       'common.required':       '*',
@@ -72,7 +72,7 @@
       'idx.card_ovr_p':        '국가/지역별 수량 + 배송정보<br>+ 세부포트 / 공휴일 / 네트워크',
       'idx.card_ship_h':       '달력 배송 상황',
       'idx.card_ship_p':       '발송 등록 및 수령 확인',
-      'idx.card_admin_h':      '관리자 (총무팀)',
+      'idx.card_admin_h':      '전체 조회',
       'idx.card_admin_p':      '응답 현황 조회<br>+ 엑셀 다운로드',
 
       /* ---------- 국내 ---------- */
@@ -236,8 +236,8 @@
       'ship.row_driver_contact_ph':'예: 홍길동 / 010-1234-5678',
 
       /* ---------- 관리자 ---------- */
-      'adm.title':             '관리자 — 2027 달력 조사 응답 관리',
-      'adm.subtitle_guest':    '로그인 필요',
+      'adm.title':             '전체 조회 — 2027 달력 조사',
+      'adm.subtitle':          '응답 현황 조회 · 엑셀 다운로드',
       'adm.login_h':           '관리자 로그인',
       'adm.login_p':           '총무팀 담당자 이메일(<b>sonojang@sinokor.co.kr</b>)로 로그인합니다.<br>로그인 후 우측 상단에서 비밀번호를 변경할 수 있습니다.',
       'adm.login_btn':         '로그인',
@@ -268,7 +268,7 @@
     en: {
       /* ---------- Common ---------- */
       'nav.home':              '← Home',
-      'nav.admin':             'Admin',
+      'nav.admin':             '📊 View All',
       'nav.logout':            'Logout',
       'nav.change_pw':         '🔑 Change Password',
       'common.required':       '*',
@@ -327,7 +327,7 @@
       'idx.card_ovr_p':        'Quantities & delivery by country/region<br>+ Ports / Holidays / Network',
       'idx.card_ship_h':       'Calendar Shipping Status',
       'idx.card_ship_p':       'Register shipment & confirm receipt',
-      'idx.card_admin_h':      'Admin (General Affairs)',
+      'idx.card_admin_h':      'View All',
       'idx.card_admin_p':      'View responses<br>+ Excel download',
 
       /* ---------- Domestic ---------- */
@@ -491,8 +491,8 @@
       'ship.row_driver_contact_ph':'e.g. Hong Gildong / 010-1234-5678',
 
       /* ---------- Admin ---------- */
-      'adm.title':             'Admin — 2027 Calendar Response Management',
-      'adm.subtitle_guest':    'Login required',
+      'adm.title':             'View All — 2027 Calendar Survey',
+      'adm.subtitle':          'Response overview · Excel download',
       'adm.login_h':           'Admin Login',
       'adm.login_p':           'Login as the General Affairs admin (<b>sonojang@sinokor.co.kr</b>).<br>After login you can change the password from the top right.',
       'adm.login_btn':         'Login',

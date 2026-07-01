@@ -1,137 +1,8 @@
-// 관리자 페이지 - 로그인, 조회, 엑셀/CSV 다운로드
+// 전체 조회 페이지 - 인증 없이 응답 데이터 조회, 엑셀/CSV 다운로드
+// (2026-07-01) 관리자 로그인 제거 — 사내 URL 공유 기반, 누구나 조회·다운로드 가능
 
 (function () {
   const _t = (k) => (window.i18n ? window.i18n.t(k) : k);
-
-  const loginCard = document.getElementById('login-card');
-  const dashboard = document.getElementById('dashboard');
-  const userEmail = document.getElementById('user-email');
-  const logoutBtn = document.getElementById('logout-btn');
-  const loginMsg  = document.getElementById('login-msg');
-
-  /* ----------------------------------------------------------
-     인증 처리
-  ---------------------------------------------------------- */
-  async function checkSession() {
-    const { data } = await supabaseClient.auth.getSession();
-    if (data.session) {
-      const email = data.session.user.email;
-      if (email !== ADMIN_EMAIL) {
-        loginMsg.innerHTML = `<div class="alert alert-danger">
-          허용되지 않은 계정입니다 (${email}).
-        </div>`;
-        await supabaseClient.auth.signOut();
-        return;
-      }
-      showDashboard(email);
-    }
-  }
-
-  function showDashboard(email) {
-    loginCard.style.display = 'none';
-    dashboard.style.display = 'block';
-    userEmail.removeAttribute('data-i18n');  // i18n 갱신 막기 (이메일 표시 유지)
-    userEmail.textContent  = email;
-    logoutBtn.style.display = 'inline';
-    document.getElementById('change-pw-btn').style.display = 'inline';
-    loadAll();
-    loadNetworkImagePreviews();
-  }
-
-  document.getElementById('login-btn').addEventListener('click', async () => {
-    loginMsg.innerHTML = '';
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value;
-    if (!email || !password) {
-      loginMsg.innerHTML = `<div class="alert alert-danger">이메일과 비밀번호를 입력하세요.</div>`;
-      return;
-    }
-    if (email !== ADMIN_EMAIL) {
-      loginMsg.innerHTML = `<div class="alert alert-danger">관리자 이메일이 아닙니다.</div>`;
-      return;
-    }
-    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-    if (error) {
-      loginMsg.innerHTML = `<div class="alert alert-danger">로그인 실패: ${error.message}</div>`;
-      return;
-    }
-    showDashboard(data.user.email);
-  });
-
-  document.getElementById('reset-btn').addEventListener('click', async () => {
-    const email = document.getElementById('login-email').value.trim();
-    if (!email) {
-      loginMsg.innerHTML = `<div class="alert alert-danger">이메일을 입력하세요.</div>`;
-      return;
-    }
-    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.href
-    });
-    if (error) {
-      loginMsg.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
-    } else {
-      loginMsg.innerHTML = `<div class="alert alert-info">
-        ${email}로 비밀번호 재설정 메일을 보냈습니다. 메일을 확인하세요.
-      </div>`;
-    }
-  });
-
-  logoutBtn.addEventListener('click', async (e) => {
-    e.preventDefault();
-    await supabaseClient.auth.signOut();
-    location.reload();
-  });
-
-  /* ----------------------------------------------------------
-     비밀번호 변경
-  ---------------------------------------------------------- */
-  const pwModal  = document.getElementById('pw-modal');
-  const pwNew    = document.getElementById('pw-new');
-  const pwNew2   = document.getElementById('pw-new2');
-  const pwMsg    = document.getElementById('pw-msg');
-
-  function openPwModal() {
-    pwNew.value = ''; pwNew2.value = ''; pwMsg.innerHTML = '';
-    pwModal.style.display = 'flex';
-    setTimeout(() => pwNew.focus(), 50);
-  }
-  function closePwModal() { pwModal.style.display = 'none'; }
-
-  document.getElementById('change-pw-btn').addEventListener('click', e => {
-    e.preventDefault();
-    openPwModal();
-  });
-  document.getElementById('pw-cancel').addEventListener('click', closePwModal);
-  pwModal.addEventListener('click', e => { if (e.target === pwModal) closePwModal(); });
-
-  document.getElementById('pw-submit').addEventListener('click', async () => {
-    const p1 = pwNew.value;
-    const p2 = pwNew2.value;
-    pwMsg.innerHTML = '';
-    if (!p1 || p1.length < 8) {
-      pwMsg.innerHTML = `<div class="alert alert-danger">새 비밀번호는 8자 이상이어야 합니다.</div>`;
-      return;
-    }
-    if (p1 !== p2) {
-      pwMsg.innerHTML = `<div class="alert alert-danger">두 비밀번호가 일치하지 않습니다.</div>`;
-      return;
-    }
-    const btn = document.getElementById('pw-submit');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>변경 중...';
-
-    const { error } = await supabaseClient.auth.updateUser({ password: p1 });
-    btn.disabled = false;
-    btn.innerHTML = '변경';
-
-    if (error) {
-      pwMsg.innerHTML = `<div class="alert alert-danger">변경 실패: ${error.message}</div>`;
-      return;
-    }
-    pwMsg.innerHTML = `<div class="alert alert-success">✓ 비밀번호가 변경되었습니다. 다음 로그인부터 새 비밀번호를 사용하세요.</div>`;
-    pwNew.value = ''; pwNew2.value = '';
-    setTimeout(closePwModal, 2000);
-  });
 
   /* ----------------------------------------------------------
      탭 전환
@@ -791,6 +662,7 @@ ${sections}
 
   NET_COMPANIES.forEach(setupNetworkImageUpload);
 
-  // 초기 진입
-  checkSession();
+  // 초기 진입 — 인증 없이 바로 데이터 로드
+  loadAll();
+  loadNetworkImagePreviews();
 })();

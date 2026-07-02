@@ -124,7 +124,7 @@
             <td class="num">${(r.heunga_b_qty||0).toLocaleString()}</td>
             <td>${esc(r.submitter_name||'')}</td>
             <td>${esc(r.submitter_email||'')}</td>
-            <td>${esc(r.note||'')}</td>
+            <td class="wrap">${esc(r.note||'')}</td>
             <td>${fmtDate(r.created_at)}</td>
           </tr>`).join('') || emptyRow(9)}
       </tbody>`;
@@ -151,14 +151,14 @@
             <td class="num">${(r.heunga_qty||0).toLocaleString()}</td>
             <td class="num">${(r.yjc_jangkum_qty||0).toLocaleString()}</td>
             <td class="num">${(r.yjc_heunga_qty||0).toLocaleString()}</td>
-            <td>${esc(r.shipping_method||'')}</td>
+            <td class="wrap">${esc(r.shipping_method||'')}</td>
             <td>${esc(r.port_code||'')}</td>
-            <td>${esc(r.pic_name||'')}</td>
-            <td>${esc(r.pic_contact||'')}</td>
-            <td>${esc(r.shipping_address||'').replace(/\n/g,'<br>')}</td>
-            <td>${esc(r.note||'')}</td>
+            <td class="wrap">${esc(r.pic_name||'')}</td>
+            <td class="wrap">${esc(r.pic_contact||'')}</td>
+            <td class="wrap-address">${esc(r.shipping_address||'').replace(/\n/g,'<br>')}</td>
+            <td class="wrap">${esc(r.note||'')}</td>
             <td>${esc(r.submitter_name||'')}</td>
-            <td>${esc(r.submitter_office||'')}</td>
+            <td class="wrap">${esc(r.submitter_office||'')}</td>
             <td>${fmtDate(r.created_at)}</td>
           </tr>`).join('') || emptyRow(17)}
       </tbody>`;
@@ -179,10 +179,10 @@
             <td>${esc(r.region)}</td>
             <td>${esc(r.port_code||'')}</td>
             <td class="num">${(r.quantity||0).toLocaleString()}</td>
-            <td>${esc(r.company_name||'')}</td>
-            <td>${esc(r.address||'').replace(/\n/g,'<br>')}</td>
+            <td class="wrap">${esc(r.company_name||'')}</td>
+            <td class="wrap-address">${esc(r.address||'').replace(/\n/g,'<br>')}</td>
             <td>${esc(r.submitter_name||'')}</td>
-            <td>${esc(r.submitter_office||'')}</td>
+            <td class="wrap">${esc(r.submitter_office||'')}</td>
             <td>${fmtDate(r.created_at)}</td>
           </tr>`).join('') || emptyRow(9)}
       </tbody>`;
@@ -223,11 +223,11 @@
             <td>${esc(r.country)}</td>
             <td>${esc(r.branch_name)}</td>
             <td>${esc(r.field||'')}</td>
-            <td>${esc(r.old_value||'').replace(/\n/g,'<br>')}</td>
-            <td>${esc(r.new_value||'').replace(/\n/g,'<br>')}</td>
-            <td>${esc(r.full_note||'').replace(/\n/g,'<br>')}</td>
+            <td class="wrap">${esc(r.old_value||'').replace(/\n/g,'<br>')}</td>
+            <td class="wrap">${esc(r.new_value||'').replace(/\n/g,'<br>')}</td>
+            <td class="wrap-wide">${esc(r.full_note||'').replace(/\n/g,'<br>')}</td>
             <td>${esc(r.submitter_name||'')}</td>
-            <td>${esc(r.submitter_office||'')}</td>
+            <td class="wrap">${esc(r.submitter_office||'')}</td>
             <td>${fmtDate(r.created_at)}</td>
           </tr>`).join('') || emptyRow(9)}
       </tbody>`;
@@ -257,10 +257,10 @@
             <td>${esc(r.eta||'')}</td>
             <td>${esc(r.tracking_no||'')}</td>
             <td>${esc(r.courier||'')}</td>
-            <td>${esc(r.note||'').replace(/\n/g,'<br>')}</td>
+            <td class="wrap-wide">${esc(r.note||'').replace(/\n/g,'<br>')}</td>
             <td>${recv}</td>
             <td>${esc(r.submitter_name||'')}</td>
-            <td>${esc(r.submitter_office||'')}</td>
+            <td class="wrap">${esc(r.submitter_office||'')}</td>
             <td>${fmtDate(r.created_at)}</td>
           </tr>`;
         }).join('') || emptyRow(12)}
@@ -532,7 +532,7 @@
 ${sections}
 
 <div style="margin-top:40px; text-align:right; color:#888; font-size:11px">
-  생성: ${new Date().toLocaleString('ko-KR')} · ${rows.length}건 · 시노코 그룹 총무팀
+  생성: ${new Date().toLocaleString('ko-KR')} · ${rows.length}건 · 장금상선, 흥아라인
 </div>
 
 </body></html>`;

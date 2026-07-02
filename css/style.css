@@ -236,9 +236,41 @@ tr:hover td { background: #fafbfc; }
 .table-wrap {
   background: #fff;
   border-radius: var(--radius);
-  overflow: auto;
+  overflow-x: auto;             /* 컬럼 많을 때 좌우 스크롤 */
+  overflow-y: hidden;
   box-shadow: var(--shadow);
   margin-bottom: 16px;
+  max-width: 100%;
+}
+/* 테이블은 컨텐츠 기반 폭 — 부모보다 넓으면 자동으로 좌우 스크롤 */
+.table-wrap table {
+  width: max-content;
+  min-width: 100%;
+}
+/* 기본 셀: 한 줄로 유지 (내용이 위아래로 늘어나지 않게) */
+.table-wrap th, .table-wrap td {
+  white-space: nowrap;
+  vertical-align: top;
+}
+/* 긴 텍스트 컬럼(주소·비고·비특이사항)은 max-width 안에서 줄바꿈 허용 */
+.table-wrap td.wrap {
+  white-space: normal;
+  word-break: break-word;
+  max-width: 320px;
+  min-width: 200px;
+}
+.table-wrap td.wrap-wide {
+  white-space: normal;
+  word-break: break-word;
+  max-width: 420px;
+  min-width: 260px;
+}
+/* 주소 컬럼은 특별히 넓게 (기존 wrap-wide의 4배) */
+.table-wrap td.wrap-address {
+  white-space: normal;
+  word-break: break-word;
+  max-width: 1680px;
+  min-width: 1040px;
 }
 
 /* ---------- 칼렌더 타입 안내 ---------- */

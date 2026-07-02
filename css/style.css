@@ -273,21 +273,7 @@ tr:hover td { background: #fafbfc; }
   min-width: 1040px;
 }
 
-/* ---------- 보고자료 탭 ---------- */
-.report-title {
-  text-align: center;
-  color: var(--primary);
-  font-size: 24px;
-  margin: 0 0 6px;
-  letter-spacing: -0.5px;
-}
-.report-meta {
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 12px;
-  margin-bottom: 20px;
-}
-
+/* ---------- 보고자료 (PDF 스타일) ---------- */
 .report-toolbar {
   display: flex;
   align-items: center;
@@ -299,72 +285,196 @@ tr:hover td { background: #fafbfc; }
   color: var(--text-muted);
   font-size: 12px;
 }
-.report-block {
-  background: #fff;
-  border-radius: var(--radius);
-  padding: 20px;
-  box-shadow: var(--shadow);
-  margin-bottom: 20px;
-  overflow-x: auto;
+
+/* 문서 상단 헤더 */
+.report-header {
+  padding: 8px 0 20px;
+  border-bottom: 2px solid var(--primary);
+  margin-bottom: 24px;
 }
-.report-block h3 {
-  margin: 0 0 12px;
+.report-tagline {
+  font-size: 11px;
+  letter-spacing: 4px;
   color: var(--primary);
-  font-size: 16px;
-  border-left: 4px solid var(--primary);
-  padding-left: 10px;
+  font-weight: 600;
+  margin-bottom: 6px;
 }
+.report-title {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--primary);
+  margin: 0 0 4px;
+  letter-spacing: -0.8px;
+}
+.report-subtitle {
+  color: #333;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+.report-meta {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.report-meta b { color: var(--primary); }
+
+/* 각 섹션 (01/02/03) */
+.report-section {
+  background: transparent;
+  margin-bottom: 24px;
+}
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  border-bottom: 1.5px solid var(--primary);
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+}
+.section-num {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--primary);
+  font-family: 'Times New Roman', serif;
+}
+.section-title {
+  margin: 0;
+  font-size: 20px;
+  color: var(--primary);
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+.section-badge {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* 표 */
 .report-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
-  min-width: 720px;
+  font-size: 12px;
 }
 .report-table th, .report-table td {
-  border: 1px solid #d0d8e2;
-  padding: 6px 10px;
+  border-bottom: 1px solid #e3e8ef;
+  padding: 7px 10px;
   text-align: right;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
 .report-table thead th {
-  background: #003876;
-  color: #fff;
+  background: transparent;
+  color: var(--primary);
   font-weight: 600;
   text-align: center;
+  border-bottom: 1.5px solid var(--primary);
+  padding: 8px 10px;
 }
 .report-table thead tr:nth-child(2) th {
-  background: #1e5bb8;
+  background: transparent;
+  color: #555;
+  border-bottom: 1px solid #c8d1de;
+  font-size: 11px;
 }
 .report-table .left { text-align: left; }
 .report-table .group {
-  background: #f0f3f7;
   font-weight: 700;
   color: var(--primary);
   text-align: left;
 }
-.report-table tbody tr.subtotal td,
+.report-table tbody tr:hover td { background: #fafbfc; }
 .report-table tbody tr.total td {
-  background: #eef2f7;
+  background: #003876 !important;
+  color: #fff !important;
   font-weight: 700;
-  color: var(--primary);
+  border-bottom: 0;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
-.report-table tbody tr.total td {
-  background: #003876;
-  color: #fff;
+.report-table tbody tr.total td.left { color: #fff !important; }
+.report-table .up   { color: #1b8a3a; font-weight: 700; }  /* 초록 = 증가 */
+.report-table .down { color: #c62828; font-weight: 700; }  /* 빨강 = 감소 */
+.report-table .zero { color: #bbb; }
+
+/* 범례 */
+.report-legend {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 8px 0 12px;
 }
-.report-table .up   { color: #c62828; font-weight: 600; }
-.report-table .down { color: #1565c0; font-weight: 600; }
-.report-table .zero { color: #999; }
-.report-summary {
-  background: #fff8e1;
-  border-left: 4px solid #f57c00;
-  padding: 12px 16px;
+
+/* 요약 노트 박스 (연한 회색) */
+.report-notes {
+  background: #f5f7fa;
   border-radius: 4px;
-  font-size: 14px;
-  margin-top: 12px;
+  padding: 12px 16px;
+  border: 1px solid #e3e8ef;
 }
-.report-summary b { color: var(--primary); }
+.report-notes h4 {
+  margin: 0 0 8px;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 700;
+}
+.report-notes ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #333;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.report-notes li { margin-bottom: 3px; }
+.report-notes b { color: var(--primary); }
+.report-notes .up   { color: #1b8a3a; font-weight: 700; }
+.report-notes .down { color: #c62828; font-weight: 700; }
+
+/* 03 페이지의 3-column 카드 요약 */
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 16px 0 16px;
+}
+.summary-card {
+  border: 1px solid #d0d8e2;
+  border-radius: 6px;
+  padding: 14px 16px;
+  background: #fff;
+}
+.summary-card .card-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.summary-card .card-value {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1.1;
+  letter-spacing: -1px;
+}
+.summary-card .card-value .unit {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+.summary-card .card-prev {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 4px 0;
+}
+.summary-card .card-diff {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+.summary-card .card-diff.down { color: #c62828; background: #fdecea; }
+.summary-card .card-diff.up   { color: #1b8a3a; background: #e6f4ea; }
+.summary-card .card-diff.neutral { color: #666; background: #f0f3f7; }
 
 /* ---------- 편집 모달 (관리자 로그인 · 응답 수정) ---------- */
 .edit-modal {
@@ -482,83 +592,100 @@ tr:hover td { background: #fafbfc; }
     background: transparent !important;
   }
 
-  /* 상단 제목 */
+  /* 문서 헤더 */
+  .report-header {
+    padding: 0 0 12px;
+    margin-bottom: 16px;
+    border-bottom: 2px solid #003876 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .report-tagline {
+    letter-spacing: 3px;
+    font-size: 9px !important;
+    color: #003876 !important;
+  }
   .report-title {
-    text-align: center;
-    color: #000 !important;
-    font-size: 22px !important;
-    font-weight: 700 !important;
-    margin: 0 0 6px !important;
-    padding-bottom: 8px;
-    border-bottom: 2px solid #000;
+    font-size: 26px !important;
+    color: #003876 !important;
+    margin: 0 0 4px !important;
   }
-  .report-meta {
-    text-align: center;
-    font-size: 10px !important;
-    color: #444 !important;
-    margin-bottom: 16px !important;
-  }
+  .report-subtitle { font-size: 12px !important; color: #333 !important; }
+  .report-meta { font-size: 10px !important; color: #555 !important; }
 
-  /* 각 표 블록 — 페이지 사이 잘리지 않게 */
-  .report-block {
-    box-shadow: none !important;
-    padding: 0 !important;
-    margin: 0 0 18px !important;
-    background: transparent !important;
-    overflow: visible !important;
+  /* 각 섹션 페이지 나누기 */
+  .report-section {
     page-break-inside: avoid;
     break-inside: avoid;
+    margin-bottom: 16px !important;
   }
-  .report-block h3 {
-    color: #000 !important;
-    border-left-color: #000 !important;
-    font-size: 13px !important;
-    margin: 0 0 8px !important;
+  .report-section.page-break {
+    page-break-before: always;
+    break-before: page;
   }
+  .section-head {
+    border-bottom: 1.5px solid #003876 !important;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .section-num  { color: #003876 !important; font-size: 18px !important; }
+  .section-title { color: #003876 !important; font-size: 16px !important; }
+  .section-badge { font-size: 10px !important; }
 
-  /* 표 자체 — 화면 폭 꽉 채우고 min-width 리셋 */
+  /* 표 */
   .report-table {
     font-size: 10px;
     width: 100% !important;
     min-width: 0 !important;
-    table-layout: auto;
   }
-  .report-table th, .report-table td { padding: 3px 5px; }
+  .report-table th, .report-table td { padding: 3px 6px; }
   .report-table thead th {
-    background: #003876 !important;
-    color: #fff !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    color: #003876 !important;
+    border-bottom-color: #003876 !important;
   }
-  .report-table thead tr:nth-child(2) th {
-    background: #1e5bb8 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
+  .report-table thead tr:nth-child(2) th { color: #555 !important; }
   .report-table tbody tr.total td {
     background: #003876 !important;
     color: #fff !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-  .report-table .group {
-    background: #f0f3f7 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-  .report-table .up   { color: #b71c1c !important; }
-  .report-table .down { color: #0d47a1 !important; }
+  .report-table .up   { color: #1b8a3a !important; }
+  .report-table .down { color: #c62828 !important; }
 
-  /* 요약 문구 강조 */
-  .report-summary {
-    background: #fff !important;
-    border: 1.5px solid #003876 !important;
-    color: #000 !important;
-    padding: 10px 14px !important;
-    font-size: 11px !important;
+  /* 요약 노트 박스 */
+  .report-notes {
+    background: #f5f7fa !important;
+    border: 1px solid #d5dde7 !important;
+    padding: 8px 12px !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+  .report-notes h4 { color: #003876 !important; font-size: 11px !important; }
+  .report-notes ul { font-size: 10px !important; }
+  .report-notes .up   { color: #1b8a3a !important; }
+  .report-notes .down { color: #c62828 !important; }
+
+  /* 카드 요약 */
+  .summary-cards {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 10px 0 !important;
+  }
+  .summary-card {
+    padding: 10px 12px !important;
+    border: 1px solid #d0d8e2 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .summary-card .card-value { font-size: 22px !important; }
+  .summary-card .card-diff  { font-size: 10px !important; }
+  .summary-card .card-diff.down { background: #fdecea !important; color: #c62828 !important; }
+  .summary-card .card-diff.up   { background: #e6f4ea !important; color: #1b8a3a !important; }
+
+  .report-legend { font-size: 9px !important; margin: 4px 0 8px !important; }
 }
 
 /* ---------- 칼렌더 타입 안내 ---------- */

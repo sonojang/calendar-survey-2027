@@ -575,7 +575,7 @@
     const v = Number(n || 0);
     return v === 0 ? '-' : v.toLocaleString('ko-KR');
   }
-  // 증감 셀: A - B (A=올해, B=작년). 감소는 파란▼, 증가는 빨간▲, 동일은 회색 '-'
+  // 증감 셀: A - B (A=올해, B=작년). 감소는 빨간▼, 증가는 초록▲, 동일은 회색 '-'
   function fmtDiff(a, b) {
     const va = Number(a || 0), vb = Number(b || 0);
     const d = va - vb;
@@ -583,10 +583,42 @@
     if (d > 0)  return `<span class="up">${d.toLocaleString('ko-KR')} ▲</span>`;
     return `<span class="down">${Math.abs(d).toLocaleString('ko-KR')} ▼</span>`;
   }
+  // 문장형 증감: "▲ 100부 증가" / "▼ 50부 감소" / "동일"
+  function diffText(a, b) {
+    const d = Number(a || 0) - Number(b || 0);
+    if (d === 0) return '동일';
+    if (d > 0)  return `<span class="up">▲${d.toLocaleString()}부 증가</span>`;
+    return `<span class="down">▼${Math.abs(d).toLocaleString()}부 감소</span>`;
+  }
 
   // 연도별 신청 단위 환산 — 박스 단위 저장 연도는 * 25로 부수로 환산
   function toCopies(qty, year) {
     return year >= BOX_UNIT_FROM_YEAR ? Number(qty || 0) * COPIES_PER_BOX : Number(qty || 0);
+  }
+
+  // 감소 상위 N개 + 증가/신규 항목 인사이트 자동 생성
+  function pickInsights(rows) {
+    // rows: [{label, aJ, aH, bJ, bH}]
+    const withDiff = rows.map(r => ({
+      ...r,
+      diffJ: r.aJ - r.bJ,
+      diffH: r.aH - r.bH,
+      absMax: Math.max(Math.abs(r.aJ - r.bJ), Math.abs(r.aH - r.bH))
+    }));
+    // 감소 규모 상위 (장금 or 흥아 중 감소가 큰 순)
+    const decreases = withDiff
+      .filter(r => r.diffJ < 0 || r.diffH < 0)
+      .sort((a,b) => {
+        const av = Math.max(a.diffJ < 0 ? -a.diffJ : 0, a.diffH < 0 ? -a.diffH : 0);
+        const bv = Math.max(b.diffJ < 0 ? -b.diffJ : 0, b.diffH < 0 ? -b.diffH : 0);
+        return bv - av;
+      })
+      .slice(0, 3);
+    // 증가/신규
+    const increases = withDiff
+      .filter(r => r.diffJ > 0 || r.diffH > 0)
+      .sort((a,b) => (b.diffJ + b.diffH) - (a.diffJ + a.diffH));
+    return { decreases, increases };
   }
 
   function renderReport() {
@@ -626,20 +658,24 @@
       }
     });
 
-    // 국내 표 렌더 — 같은 division 그룹 첫 행에만 division 표시
-    let lastDivision = null;
+    // 국내 표 데이터 수집 (렌더 후 인사이트에도 사용)
     let sumAJ = 0, sumAH = 0, sumBJ = 0, sumBH = 0;
-    const domRows = domKeys.map(({division, team}) => {
+    const domRowsData = [];
+    domKeys.forEach(({division, team}) => {
       const k = `${division}|${team}`;
       const a = domA.get(k) || {};
       const b = domB.get(k) || {};
-      // 저장된 값이 박스인지 부수인지에 따라 부수로 환산
       const aJ = toCopies(a.jangkum_b_qty, yA), aH = toCopies(a.heunga_b_qty, yA);
       const bJ = toCopies(b.jangkum_b_qty, yB), bH = toCopies(b.heunga_b_qty, yB);
-      // 두 해 모두 0인 팀은 표시에서 생략 (마스터에 있지만 데이터 없음)
-      if (aJ === 0 && aH === 0 && bJ === 0 && bH === 0) return null;
+      if (aJ === 0 && aH === 0 && bJ === 0 && bH === 0) return;
       sumAJ += aJ; sumAH += aH; sumBJ += bJ; sumBH += bH;
-      const divCell = (division !== lastDivision) ? `<td class="left group" rowspan="1">${esc(division)}</td>` : `<td class="left"></td>`;
+      domRowsData.push({division, team, label: team, aJ, aH, bJ, bH});
+    });
+
+    // 국내 표 렌더 (같은 division 그룹 첫 행에만 division 표시)
+    let lastDivision = null;
+    const domRows = domRowsData.map(({division, team, aJ, aH, bJ, bH}) => {
+      const divCell = (division !== lastDivision) ? `<td class="left group">${esc(division)}</td>` : `<td class="left"></td>`;
       lastDivision = division;
       return `<tr>
         ${divCell}
@@ -648,11 +684,40 @@
         <td>${fmtQty(bJ)}</td><td>${fmtQty(bH)}</td>
         <td>${fmtDiff(aJ, bJ)}</td><td>${fmtDiff(aH, bH)}</td>
       </tr>`;
-    }).filter(Boolean).join('');
+    }).join('');
+
+    const domInsight = pickInsights(domRowsData);
+    const domNoteItems = [];
+    domNoteItems.push(
+      `국내 합계 <b>장금 ${sumBJ.toLocaleString()} → ${sumAJ.toLocaleString()}부</b> (${diffText(sumAJ, sumBJ)}), ` +
+      `<b>흥아 ${sumBH.toLocaleString()} → ${sumAH.toLocaleString()}부</b> (${diffText(sumAH, sumBH)}).`
+    );
+    if (domInsight.decreases.length) {
+      const top = domInsight.decreases.slice(0, 3).map(r => {
+        const parts = [];
+        if (r.diffJ < 0) parts.push(`장금 ▼${Math.abs(r.diffJ).toLocaleString()}`);
+        if (r.diffH < 0) parts.push(`흥아 ▼${Math.abs(r.diffH).toLocaleString()}`);
+        return `${r.team}(${parts.join(' / ')})`;
+      }).join(', ');
+      domNoteItems.push(`감소 규모 상위: ${top}.`);
+    }
+    if (domInsight.increases.length) {
+      const inc = domInsight.increases.slice(0, 4).map(r => {
+        const parts = [];
+        if (r.diffJ > 0) parts.push(`장금 ▲${r.diffJ.toLocaleString()}`);
+        if (r.diffH > 0) parts.push(`흥아 ▲${r.diffH.toLocaleString()}`);
+        return `${r.team}(${parts.join(' / ')})`;
+      }).join(', ');
+      domNoteItems.push(`신규·증가 신청: ${inc}.`);
+    }
 
     const domTable = `
-      <div class="report-block">
-        <h3>국내 ${yA}년 달력 신청수량 (전년 대비) · <span style="font-size:12px; font-weight:400; color:var(--text-muted)">단위: 부</span></h3>
+      <section class="report-section">
+        <div class="section-head">
+          <span class="section-num">01</span>
+          <h2 class="section-title">국내 신청현황</h2>
+          <span class="section-badge">단위: 부 · 전년 대비</span>
+        </div>
         <table class="report-table">
           <thead>
             <tr>
@@ -678,7 +743,12 @@
             </tr>
           </tbody>
         </table>
-      </div>`;
+        <div class="report-legend">▲ 증가 &nbsp; ▼ 감소 &nbsp; - 해당없음</div>
+        <div class="report-notes">
+          <h4>국내 현황 요약</h4>
+          <ul>${domNoteItems.map(t => `<li>${t}</li>`).join('')}</ul>
+        </div>
+      </section>`;
 
     // ----- 해외 -----
     const ovA = new Map(), ovB = new Map();
@@ -702,19 +772,24 @@
       }
     });
 
-    let lastCountry = null;
+    // 해외 표 데이터 수집
     let osAJ = 0, osAH = 0, osBJ = 0, osBH = 0;
-    const ovRows = ovKeys.map(({country, region}) => {
+    const ovRowsData = [];
+    ovKeys.forEach(({country, region}) => {
       const k = `${country}|${region}`;
       const a = ovA.get(k) || {};
       const b = ovB.get(k) || {};
-      // 장금·흥아 통합 수량 (기본 + YJC 합산) → 부수로 환산
       const aJ = toCopies((a.jangkum_qty||0) + (a.yjc_jangkum_qty||0), yA);
       const aH = toCopies((a.heunga_qty ||0) + (a.yjc_heunga_qty ||0), yA);
       const bJ = toCopies((b.jangkum_qty||0) + (b.yjc_jangkum_qty||0), yB);
       const bH = toCopies((b.heunga_qty ||0) + (b.yjc_heunga_qty ||0), yB);
-      if (aJ === 0 && aH === 0 && bJ === 0 && bH === 0) return null;
+      if (aJ === 0 && aH === 0 && bJ === 0 && bH === 0) return;
       osAJ += aJ; osAH += aH; osBJ += bJ; osBH += bH;
+      ovRowsData.push({country, region, label: `${country} ${region}`, aJ, aH, bJ, bH});
+    });
+
+    let lastCountry = null;
+    const ovRows = ovRowsData.map(({country, region, aJ, aH, bJ, bH}) => {
       const countryCell = (country !== lastCountry) ? `<td class="left group">${esc(country)}</td>` : `<td class="left"></td>`;
       lastCountry = country;
       return `<tr>
@@ -724,11 +799,40 @@
         <td>${fmtQty(bJ)}</td><td>${fmtQty(bH)}</td>
         <td>${fmtDiff(aJ, bJ)}</td><td>${fmtDiff(aH, bH)}</td>
       </tr>`;
-    }).filter(Boolean).join('');
+    }).join('');
+
+    const ovInsight = pickInsights(ovRowsData);
+    const ovNoteItems = [];
+    ovNoteItems.push(
+      `해외 합계 <b>장금 ${osBJ.toLocaleString()} → ${osAJ.toLocaleString()}부</b> (${diffText(osAJ, osBJ)}), ` +
+      `<b>흥아 ${osBH.toLocaleString()} → ${osAH.toLocaleString()}부</b> (${diffText(osAH, osBH)}).`
+    );
+    if (ovInsight.decreases.length) {
+      const top = ovInsight.decreases.slice(0, 3).map(r => {
+        const parts = [];
+        if (r.diffJ < 0) parts.push(`장금 ▼${Math.abs(r.diffJ).toLocaleString()}`);
+        if (r.diffH < 0) parts.push(`흥아 ▼${Math.abs(r.diffH).toLocaleString()}`);
+        return `${r.label}(${parts.join(' / ')})`;
+      }).join(', ');
+      ovNoteItems.push(`주요 감소 거점: ${top}.`);
+    }
+    if (ovInsight.increases.length) {
+      const inc = ovInsight.increases.slice(0, 4).map(r => {
+        const parts = [];
+        if (r.diffJ > 0) parts.push(`장금 ▲${r.diffJ.toLocaleString()}`);
+        if (r.diffH > 0) parts.push(`흥아 ▲${r.diffH.toLocaleString()}`);
+        return `${r.label}(${parts.join(' / ')})`;
+      }).join(', ');
+      ovNoteItems.push(`신규·증가 거점: ${inc}.`);
+    }
 
     const ovTable = `
-      <div class="report-block">
-        <h3>해외 ${yA}년 달력 신청수량 (전년 대비) · <span style="font-size:12px; font-weight:400; color:var(--text-muted)">단위: 부</span></h3>
+      <section class="report-section page-break">
+        <div class="section-head">
+          <span class="section-num">02</span>
+          <h2 class="section-title">해외 신청현황</h2>
+          <span class="section-badge">단위: 부 · 전년 대비</span>
+        </div>
         <table class="report-table">
           <thead>
             <tr>
@@ -754,24 +858,82 @@
             </tr>
           </tbody>
         </table>
-        <p style="font-size:12px; color:var(--text-muted); margin:6px 0 0">
-          * 해외 수량은 <b>기본 + YJC</b> 합산 기준입니다. · 신청 시 <b>1 BOX = ${COPIES_PER_BOX}부</b>로 자동 환산 표시.
-        </p>
-      </div>`;
+        <div class="report-legend">▲ 증가 &nbsp; ▼ 감소 &nbsp; - 해당없음 &nbsp;|&nbsp; 해외 수량은 기본 + YJC 합산 기준</div>
+        <div class="report-notes">
+          <h4>해외 현황 요약</h4>
+          <ul>${ovNoteItems.map(t => `<li>${t}</li>`).join('')}</ul>
+        </div>
+      </section>`;
 
-    // ----- 전체 합계 & 요약 -----
+    // ----- 03 전체 종합 -----
     const totAJ = sumAJ + osAJ, totAH = sumAH + osAH;
     const totBJ = sumBJ + osBJ, totBH = sumBH + osBH;
     const totA = totAJ + totAH, totB = totBJ + totBH;
+
+    // 백분율 계산
+    function pctChange(a, b) {
+      if (!b) return '';
+      const p = Math.round(Math.abs(a - b) / b * 1000) / 10;
+      return `${p}%`;
+    }
+    function summaryCard(label, aTot, bTot) {
+      const diff = aTot - bTot;
+      const dir  = diff === 0 ? '' : (diff > 0 ? 'up' : 'down');
+      const arrow = diff === 0 ? '' : (diff > 0 ? '▲' : '▼');
+      const diffLine = diff === 0
+        ? `<div class="card-diff neutral">동일</div>`
+        : `<div class="card-diff ${dir}">${arrow} ${Math.abs(diff).toLocaleString()}부 · ${pctChange(aTot, bTot)}</div>`;
+      return `<div class="summary-card">
+        <div class="card-label">${label}</div>
+        <div class="card-value"><b>${aTot.toLocaleString()}</b><span class="unit">부</span></div>
+        <div class="card-prev">전년 ${bTot.toLocaleString()}부 대비</div>
+        ${diffLine}
+      </div>`;
+    }
+
+    // 종합 시사점 자동 문구
+    const overallDiff = (totA - totB);
+    const overallPct = totB ? Math.round(Math.abs(overallDiff) / totB * 1000) / 10 : 0;
+    const dirWord = overallDiff < 0 ? '감소' : (overallDiff > 0 ? '증가' : '동일');
+    const noteImpl = [];
+    if (totB > 0) {
+      noteImpl.push(
+        `양사 신청수량은 전년 대비 <b>${overallPct}% ${dirWord}</b>` +
+        (overallDiff !== 0
+          ? `하여, ${yA}년 달력 제작·배포 물량을 조정 필요.`
+          : `.`)
+      );
+    }
+    if (osAJ + osAH < osBJ + osBH) {
+      const ovDropJ = osBJ - osAJ, ovDropH = osBH - osAH;
+      noteImpl.push(
+        `감소는 <b>해외 거점(장금 ▼${Math.max(0, ovDropJ).toLocaleString()} / 흥아 ▼${Math.max(0, ovDropH).toLocaleString()})</b>` +
+        `에 집중되어, 해외 배포 정책 변경 여부를 확인·반영할 필요.`
+      );
+    }
+    if (sumAJ + sumAH < sumBJ + sumBH) {
+      noteImpl.push(
+        `국내에서도 대량 신청 부서의 수요가 축소되어, 잔여 신청은 소규모 실수요 중심으로 재편.`
+      );
+    }
+    const incAll = [...(domInsight.increases||[]), ...(ovInsight.increases||[])];
+    if (incAll.length) {
+      noteImpl.push(`신규·증가 신청 (${incAll.slice(0,3).map(r => r.label).join(', ')} 등)은 별도 확인 후 확정 물량에 반영 권장.`);
+    }
+
     const totalTable = `
-      <div class="report-block">
-        <h3>전체 합계 (국내 + 해외) · <span style="font-size:12px; font-weight:400; color:var(--text-muted)">단위: 부</span></h3>
-        <table class="report-table">
+      <section class="report-section page-break">
+        <div class="section-head">
+          <span class="section-num">03</span>
+          <h2 class="section-title">전체 종합 및 시사점</h2>
+          <span class="section-badge">국내 + 해외 · 단위: 부</span>
+        </div>
+        <table class="report-table compact">
           <thead>
             <tr>
               <th rowspan="2" class="left">구분</th>
-              <th colspan="2">${yA}년 (A)</th>
-              <th colspan="2">${yB}년 (B)</th>
+              <th colspan="2">${yA}년</th>
+              <th colspan="2">${yB}년</th>
               <th colspan="2">전년대비 (A-B)</th>
             </tr>
             <tr>
@@ -801,18 +963,31 @@
             </tr>
           </tbody>
         </table>
-        <div class="report-summary">
-          ※ <b>장금</b> ${totBJ.toLocaleString()}부 → ${totAJ.toLocaleString()}부,
-          ${totAJ === totBJ ? '변동 없음' : `${Math.abs(totAJ - totBJ).toLocaleString()}부 ${totAJ > totBJ ? '증가 ▲' : '감소 ▼'}`}
-          &nbsp;/&nbsp;
-          <b>흥아</b> ${totBH.toLocaleString()}부 → ${totAH.toLocaleString()}부,
-          ${totAH === totBH ? '변동 없음' : `${Math.abs(totAH - totBH).toLocaleString()}부 ${totAH > totBH ? '증가 ▲' : '감소 ▼'}`}
+
+        <div class="summary-cards">
+          ${summaryCard('장금상선 총계', totAJ, totBJ)}
+          ${summaryCard('흥아라인 총계', totAH, totBH)}
+          ${summaryCard('양사 합산 총계', totA, totB)}
         </div>
-      </div>`;
+
+        <div class="report-notes">
+          <h4>종합 시사점</h4>
+          <ul>${noteImpl.map(t => `<li>${t}</li>`).join('')}</ul>
+        </div>
+      </section>`;
+
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}. ${today.getMonth()+1}. ${today.getDate()}.`;
 
     el.innerHTML = `
-      <h1 class="report-title">${yA}년 달력 신청수량 보고자료</h1>
-      <div class="report-meta">장금상선 · 흥아라인 · 총무팀 &nbsp;|&nbsp; ${new Date().toLocaleDateString('ko-KR')}</div>
+      <header class="report-header">
+        <div class="report-tagline">${yA} CALENDAR ORDER REPORT</div>
+        <h1 class="report-title">${yA}년 달력 신청수량 보고자료</h1>
+        <div class="report-subtitle">국내·해외 신청현황 및 전년대비 분석</div>
+        <div class="report-meta">
+          보고대상 <b>임원</b> · 작성 <b>장금상선 · 흥아라인 총무팀</b> · 작성일 <b>${todayStr}</b>
+        </div>
+      </header>
       ${domTable}
       ${ovTable}
       ${totalTable}

@@ -15,8 +15,52 @@
   </div>
   <nav>
     <a href="index.html" data-i18n="nav.home">← 홈</a>
+    <a href="#" id="admin-login-btn" data-i18n="adm.login_link">🔐 관리자 로그인</a>
+    <span id="admin-user" style="display:none; color:#fff; opacity:0.9; margin-left:16px; font-size:13px"></span>
+    <a href="#" id="admin-logout-btn" style="display:none" data-i18n="nav.logout">로그아웃</a>
   </nav>
 </header>
+
+<!-- 로그인 모달 -->
+<div id="login-modal" class="edit-modal" style="display:none">
+  <div class="edit-modal-box" style="max-width:400px">
+    <div class="edit-modal-head">
+      <h3 data-i18n="adm.login_h">관리자 로그인</h3>
+      <button class="edit-modal-close" type="button" aria-label="닫기">×</button>
+    </div>
+    <div class="edit-modal-body">
+      <p class="desc" data-i18n="adm.login_p">등록된 관리자 이메일로 로그인하면 응답 수정·삭제가 가능합니다.</p>
+      <div class="form-group">
+        <label data-i18n="common.email">이메일</label>
+        <input id="login-email" type="email" value="sonojang@sinokor.co.kr">
+      </div>
+      <div class="form-group">
+        <label>비밀번호</label>
+        <input id="login-password" type="password">
+      </div>
+      <div id="login-msg"></div>
+    </div>
+    <div class="edit-modal-foot">
+      <button class="btn btn-secondary" id="login-cancel" data-i18n="common.cancel">취소</button>
+      <button class="btn btn-primary" id="login-submit" data-i18n="adm.login_btn">로그인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 편집 모달 (수정 폼) -->
+<div id="edit-modal" class="edit-modal" style="display:none">
+  <div class="edit-modal-box">
+    <div class="edit-modal-head">
+      <h3 id="edit-modal-title">응답 수정</h3>
+      <button class="edit-modal-close" type="button" aria-label="닫기">×</button>
+    </div>
+    <div class="edit-modal-body" id="edit-modal-fields"></div>
+    <div class="edit-modal-foot">
+      <button class="btn btn-secondary" id="edit-cancel" data-i18n="common.cancel">취소</button>
+      <button class="btn btn-primary" id="edit-save" data-i18n="common.save">저장</button>
+    </div>
+  </div>
+</div>
 
 <div class="container">
 

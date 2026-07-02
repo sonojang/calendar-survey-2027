@@ -352,6 +352,80 @@ tr:hover td { background: #fafbfc; }
 }
 .report-summary b { color: var(--primary); }
 
+/* ---------- 편집 모달 (관리자 로그인 · 응답 수정) ---------- */
+.edit-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 1300;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  overflow: auto;
+}
+.edit-modal-box {
+  background: #fff;
+  width: 100%;
+  max-width: 640px;
+  border-radius: var(--radius);
+  box-shadow: 0 6px 24px rgba(0,0,0,.18);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 80px);
+}
+.edit-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.edit-modal-head h3 { margin: 0; font-size: 16px; }
+.edit-modal-close {
+  background: transparent;
+  border: 0;
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.edit-modal-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+.edit-modal-foot {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+}
+
+/* 각 행에 붙는 액션 버튼 */
+.row-actions {
+  display: inline-flex;
+  gap: 4px;
+  white-space: nowrap;
+}
+.row-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.row-btn:hover { background: #f0f3f7; }
+.row-btn.danger { color: var(--danger); border-color: #f4c8c8; }
+.row-btn.danger:hover { background: #ffebee; }
+
+/* 인쇄 시 액션 셀은 숨김 */
+@media print {
+  .row-actions, .col-actions { display: none !important; }
+}
+
 /* ---------- 인쇄용 ---------- */
 @media print {
   .site-header,

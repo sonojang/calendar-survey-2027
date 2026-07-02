@@ -238,6 +238,9 @@
       /* ---------- 관리자 ---------- */
       'adm.title':             '전체 조회 — 2027 달력 조사',
       'adm.subtitle':          '응답 현황 조회 · 엑셀 다운로드',
+      'adm.tab_report':        '📊 보고자료',
+      'adm.report_print':      '🖨️ 인쇄 / PDF 저장',
+      'adm.report_hint':       '현재 조사년도 신청 수량과 전년도 신청 수량을 비교합니다.',
       'adm.login_h':           '관리자 로그인',
       'adm.login_p':           '총무팀 담당자 이메일(<b>sonojang@sinokor.co.kr</b>)로 로그인합니다.<br>로그인 후 우측 상단에서 비밀번호를 변경할 수 있습니다.',
       'adm.login_btn':         '로그인',
@@ -493,6 +496,9 @@
       /* ---------- Admin ---------- */
       'adm.title':             'View All — 2027 Calendar Survey',
       'adm.subtitle':          'Response overview · Excel download',
+      'adm.tab_report':        '📊 Report',
+      'adm.report_print':      '🖨️ Print / Save PDF',
+      'adm.report_hint':       'Compares current year quantities with the previous year.',
       'adm.login_h':           'Admin Login',
       'adm.login_p':           'Login as the General Affairs admin (<b>sonojang@sinokor.co.kr</b>).<br>After login you can change the password from the top right.',
       'adm.login_btn':         'Login',

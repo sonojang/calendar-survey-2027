@@ -40,13 +40,16 @@
   }
 
   async function loadAll() {
-    const [d1, d2, d3, d4, d5, d6] = await Promise.all([
+    const [d1, d2, d3, d4, d5, d6, v1, v2] = await Promise.all([
       supabaseClient.from('domestic_quantities').select('*').order('created_at', { ascending: false }),
       supabaseClient.from('overseas_quantities').select('*').order('created_at', { ascending: false }),
       supabaseClient.from('detail_ports'       ).select('*').order('created_at', { ascending: false }),
       supabaseClient.from('overseas_holidays'  ).select('*').order('created_at', { ascending: false }),
       supabaseClient.from('network_changes'    ).select('*').order('created_at', { ascending: false }),
-      supabaseClient.from('shipping_status'    ).select('*').order('created_at', { ascending: false })
+      supabaseClient.from('shipping_status'    ).select('*').order('created_at', { ascending: false }),
+      // 보고자료용 — 연도별 (division/team, country/region) 집계 view
+      supabaseClient.from('v_yearly_domestic').select('*'),
+      supabaseClient.from('v_yearly_overseas').select('*')
     ]);
     // 국내/해외 수량은 현재 조사년도(SURVEY_YEAR)만 표시. 이전 연도는 "과거 신청 수량" 모달용 히스토리로만 유지.
     // 같은 팀/지역이 여러 번 제출한 경우 최신 응답만 표시 (dedup은 화면 표시용 — DB 원본은 그대로).
@@ -62,6 +65,8 @@
     allData.holiday  = d4.data || [];
     allData.network  = d5.data || [];
     allData.shipping = d6.data || [];
+    allData.yearlyDomestic = v1.data || [];
+    allData.yearlyOverseas = v2.data || [];
 
     renderDomestic();
     renderOverseas();
@@ -69,6 +74,7 @@
     renderHoliday();
     renderNetwork();
     renderShipping();
+    renderReport();
     renderSummary();
   }
 
@@ -269,6 +275,263 @@
 
   function emptyRow(cols) {
     return `<tr><td colspan="${cols}" style="text-align:center; color:#999; padding:30px">아직 응답이 없습니다</td></tr>`;
+  }
+
+  /* ---------- 보고자료 (전년대비 비교표) ---------- */
+
+  // 셀 수량 포맷: 0은 '-', 아니면 콤마 숫자
+  function fmtQty(n) {
+    const v = Number(n || 0);
+    return v === 0 ? '-' : v.toLocaleString('ko-KR');
+  }
+  // 증감 셀: A - B (A=올해, B=작년). 감소는 파란▼, 증가는 빨간▲, 동일은 회색 '-'
+  function fmtDiff(a, b) {
+    const va = Number(a || 0), vb = Number(b || 0);
+    const d = va - vb;
+    if (d === 0) return `<span class="zero">-</span>`;
+    if (d > 0)  return `<span class="up">${d.toLocaleString('ko-KR')} ▲</span>`;
+    return `<span class="down">${Math.abs(d).toLocaleString('ko-KR')} ▼</span>`;
+  }
+
+  function renderReport() {
+    const el = document.getElementById('report-content');
+    if (!el) return;
+
+    const yA = SURVEY_YEAR;
+    const yB = SURVEY_YEAR - 1;
+
+    // ----- 국내 -----
+    // v_yearly_domestic: (survey_year, division, team, jangkum_b_qty, heunga_b_qty)
+    // 올해 신청이 아직 없으면 히스토리 데이터로만 표시되므로 division/team 마스터를 기준으로 병합
+    const domA = new Map(), domB = new Map();  // key = "division|team"
+    (allData.yearlyDomestic || []).forEach(r => {
+      const k = `${r.division}|${r.team}`;
+      if (r.survey_year === yA) domA.set(k, r);
+      else if (r.survey_year === yB) domB.set(k, r);
+    });
+    // 표시 순서: DOMESTIC_ORG의 순서 우선. 마스터에 없는 팀은 뒤에 추가.
+    const seen = new Set();
+    const domKeys = [];
+    // DOMESTIC_ORG는 회사별 배열이지만 (division, team) 순서는 두 회사 통합
+    const orderedTeams = [];
+    Object.values(DOMESTIC_ORG).forEach(list => {
+      list.forEach(({division, team}) => {
+        const k = `${division}|${team}`;
+        if (!seen.has(k)) { seen.add(k); orderedTeams.push({division, team}); }
+      });
+    });
+    orderedTeams.forEach(({division, team}) => domKeys.push({division, team}));
+    // 마스터에 없지만 데이터에 있는 팀
+    [...domA.keys(), ...domB.keys()].forEach(k => {
+      if (!seen.has(k)) {
+        seen.add(k);
+        const [division, team] = k.split('|');
+        domKeys.push({division, team});
+      }
+    });
+
+    // 국내 표 렌더 — 같은 division 그룹 첫 행에만 division 표시
+    let lastDivision = null;
+    let sumAJ = 0, sumAH = 0, sumBJ = 0, sumBH = 0;
+    const domRows = domKeys.map(({division, team}) => {
+      const k = `${division}|${team}`;
+      const a = domA.get(k) || {};
+      const b = domB.get(k) || {};
+      const aJ = a.jangkum_b_qty || 0, aH = a.heunga_b_qty || 0;
+      const bJ = b.jangkum_b_qty || 0, bH = b.heunga_b_qty || 0;
+      // 두 해 모두 0인 팀은 표시에서 생략 (마스터에 있지만 데이터 없음)
+      if (aJ === 0 && aH === 0 && bJ === 0 && bH === 0) return null;
+      sumAJ += aJ; sumAH += aH; sumBJ += bJ; sumBH += bH;
+      const divCell = (division !== lastDivision) ? `<td class="left group" rowspan="1">${esc(division)}</td>` : `<td class="left"></td>`;
+      lastDivision = division;
+      return `<tr>
+        ${divCell}
+        <td class="left">${esc(team)}</td>
+        <td>${fmtQty(aJ)}</td><td>${fmtQty(aH)}</td>
+        <td>${fmtQty(bJ)}</td><td>${fmtQty(bH)}</td>
+        <td>${fmtDiff(aJ, bJ)}</td><td>${fmtDiff(aH, bH)}</td>
+      </tr>`;
+    }).filter(Boolean).join('');
+
+    const domTable = `
+      <div class="report-block">
+        <h3>국내 ${yA}년 달력 신청수량 (전년 대비)</h3>
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th rowspan="2" class="left">구분</th>
+              <th rowspan="2" class="left">팀</th>
+              <th colspan="2">${yA}년 (A)</th>
+              <th colspan="2">${yB}년 (B)</th>
+              <th colspan="2">전년대비 (A-B)</th>
+            </tr>
+            <tr>
+              <th>장금</th><th>흥아</th>
+              <th>장금</th><th>흥아</th>
+              <th>장금</th><th>흥아</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${domRows || `<tr><td colspan="8" class="left" style="text-align:center; color:#999; padding:20px">데이터가 없습니다</td></tr>`}
+            <tr class="total">
+              <td class="left" colspan="2">국내 합계</td>
+              <td>${sumAJ.toLocaleString()}</td><td>${sumAH.toLocaleString()}</td>
+              <td>${sumBJ.toLocaleString()}</td><td>${sumBH.toLocaleString()}</td>
+              <td>${fmtDiff(sumAJ, sumBJ)}</td><td>${fmtDiff(sumAH, sumBH)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`;
+
+    // ----- 해외 -----
+    const ovA = new Map(), ovB = new Map();
+    (allData.yearlyOverseas || []).forEach(r => {
+      const k = `${r.country}|${r.region}`;
+      if (r.survey_year === yA) ovA.set(k, r);
+      else if (r.survey_year === yB) ovB.set(k, r);
+    });
+    // 표시 순서: OVERSEAS_REGIONS 우선, 데이터만 있는 것 뒤에.
+    const ovSeen = new Set();
+    const ovKeys = [];
+    OVERSEAS_REGIONS.forEach(r => {
+      const k = `${r.country}|${r.region}`;
+      if (!ovSeen.has(k)) { ovSeen.add(k); ovKeys.push({country: r.country, region: r.region}); }
+    });
+    [...ovA.keys(), ...ovB.keys()].forEach(k => {
+      if (!ovSeen.has(k)) {
+        ovSeen.add(k);
+        const [country, region] = k.split('|');
+        ovKeys.push({country, region});
+      }
+    });
+
+    let lastCountry = null;
+    let osAJ = 0, osAH = 0, osBJ = 0, osBH = 0;
+    const ovRows = ovKeys.map(({country, region}) => {
+      const k = `${country}|${region}`;
+      const a = ovA.get(k) || {};
+      const b = ovB.get(k) || {};
+      // 장금·흥아 통합 수량 (기본 + YJC 합산)
+      const aJ = (a.jangkum_qty||0) + (a.yjc_jangkum_qty||0);
+      const aH = (a.heunga_qty ||0) + (a.yjc_heunga_qty ||0);
+      const bJ = (b.jangkum_qty||0) + (b.yjc_jangkum_qty||0);
+      const bH = (b.heunga_qty ||0) + (b.yjc_heunga_qty ||0);
+      if (aJ === 0 && aH === 0 && bJ === 0 && bH === 0) return null;
+      osAJ += aJ; osAH += aH; osBJ += bJ; osBH += bH;
+      const countryCell = (country !== lastCountry) ? `<td class="left group">${esc(country)}</td>` : `<td class="left"></td>`;
+      lastCountry = country;
+      return `<tr>
+        ${countryCell}
+        <td class="left">${esc(region)}</td>
+        <td>${fmtQty(aJ)}</td><td>${fmtQty(aH)}</td>
+        <td>${fmtQty(bJ)}</td><td>${fmtQty(bH)}</td>
+        <td>${fmtDiff(aJ, bJ)}</td><td>${fmtDiff(aH, bH)}</td>
+      </tr>`;
+    }).filter(Boolean).join('');
+
+    const ovTable = `
+      <div class="report-block">
+        <h3>해외 ${yA}년 달력 신청수량 (전년 대비)</h3>
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th rowspan="2" class="left">국가</th>
+              <th rowspan="2" class="left">지역</th>
+              <th colspan="2">${yA}년 (A)</th>
+              <th colspan="2">${yB}년 (B)</th>
+              <th colspan="2">전년대비 (A-B)</th>
+            </tr>
+            <tr>
+              <th>장금</th><th>흥아</th>
+              <th>장금</th><th>흥아</th>
+              <th>장금</th><th>흥아</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${ovRows || `<tr><td colspan="8" class="left" style="text-align:center; color:#999; padding:20px">데이터가 없습니다</td></tr>`}
+            <tr class="total">
+              <td class="left" colspan="2">해외 합계</td>
+              <td>${osAJ.toLocaleString()}</td><td>${osAH.toLocaleString()}</td>
+              <td>${osBJ.toLocaleString()}</td><td>${osBH.toLocaleString()}</td>
+              <td>${fmtDiff(osAJ, osBJ)}</td><td>${fmtDiff(osAH, osBH)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p style="font-size:12px; color:var(--text-muted); margin:6px 0 0">
+          * 해외 수량은 <b>기본 + YJC</b> 합산 기준입니다.
+        </p>
+      </div>`;
+
+    // ----- 전체 합계 & 요약 -----
+    const totAJ = sumAJ + osAJ, totAH = sumAH + osAH;
+    const totBJ = sumBJ + osBJ, totBH = sumBH + osBH;
+    const totA = totAJ + totAH, totB = totBJ + totBH;
+    const totalTable = `
+      <div class="report-block">
+        <h3>전체 합계 (국내 + 해외)</h3>
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th rowspan="2" class="left">구분</th>
+              <th colspan="2">${yA}년 (A)</th>
+              <th colspan="2">${yB}년 (B)</th>
+              <th colspan="2">전년대비 (A-B)</th>
+            </tr>
+            <tr>
+              <th>장금</th><th>흥아</th>
+              <th>장금</th><th>흥아</th>
+              <th>장금</th><th>흥아</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="left group">국내 합계</td>
+              <td>${sumAJ.toLocaleString()}</td><td>${sumAH.toLocaleString()}</td>
+              <td>${sumBJ.toLocaleString()}</td><td>${sumBH.toLocaleString()}</td>
+              <td>${fmtDiff(sumAJ, sumBJ)}</td><td>${fmtDiff(sumAH, sumBH)}</td>
+            </tr>
+            <tr>
+              <td class="left group">해외 합계</td>
+              <td>${osAJ.toLocaleString()}</td><td>${osAH.toLocaleString()}</td>
+              <td>${osBJ.toLocaleString()}</td><td>${osBH.toLocaleString()}</td>
+              <td>${fmtDiff(osAJ, osBJ)}</td><td>${fmtDiff(osAH, osBH)}</td>
+            </tr>
+            <tr class="total">
+              <td class="left">전체 합계</td>
+              <td>${totAJ.toLocaleString()}</td><td>${totAH.toLocaleString()}</td>
+              <td>${totBJ.toLocaleString()}</td><td>${totBH.toLocaleString()}</td>
+              <td>${fmtDiff(totAJ, totBJ)}</td><td>${fmtDiff(totAH, totBH)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="report-summary">
+          ※ <b>장금</b> ${totBJ.toLocaleString()}부 → ${totAJ.toLocaleString()}부,
+          ${totAJ === totBJ ? '변동 없음' : `${Math.abs(totAJ - totBJ).toLocaleString()}부 ${totAJ > totBJ ? '증가 ▲' : '감소 ▼'}`}
+          &nbsp;/&nbsp;
+          <b>흥아</b> ${totBH.toLocaleString()}부 → ${totAH.toLocaleString()}부,
+          ${totAH === totBH ? '변동 없음' : `${Math.abs(totAH - totBH).toLocaleString()}부 ${totAH > totBH ? '증가 ▲' : '감소 ▼'}`}
+        </div>
+      </div>`;
+
+    el.innerHTML = `
+      <h2 style="margin:0 0 16px; color:var(--primary)">${yA}년 달력 신청수량 보고자료</h2>
+      ${domTable}
+      ${ovTable}
+      ${totalTable}
+    `;
+  }
+
+  // 인쇄 버튼
+  const printBtn = document.getElementById('report-print');
+  if (printBtn) {
+    printBtn.addEventListener('click', () => {
+      // 다른 탭이 활성 상태면 보고 탭으로 강제 전환
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
+      document.querySelector('.tab[data-tab="report"]').classList.add('active');
+      document.getElementById('panel-report').classList.add('active');
+      window.print();
+    });
   }
 
   function esc(s) {

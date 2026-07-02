@@ -84,6 +84,7 @@
         <button class="tab" data-tab="holiday" data-i18n="adm.tab_holiday">해외휴일</button>
         <button class="tab" data-tab="network" data-i18n="adm.tab_network">네트워크 변경</button>
         <button class="tab" data-tab="shipping" data-i18n="adm.tab_ship">배송 상황</button>
+        <button class="tab" data-tab="report" data-i18n="adm.tab_report">📊 보고자료</button>
       </div>
 
       <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px">
@@ -113,6 +114,13 @@
       </div>
       <div class="tab-panel" id="panel-shipping">
         <div class="table-wrap"><table id="table-shipping"></table></div>
+      </div>
+      <div class="tab-panel" id="panel-report">
+        <div class="report-toolbar">
+          <button class="btn btn-primary btn-sm" id="report-print" data-i18n="adm.report_print">🖨️ 인쇄 / PDF 저장</button>
+          <span class="report-hint" data-i18n="adm.report_hint">현재 조사년도 신청 수량과 전년도 신청 수량을 비교합니다.</span>
+        </div>
+        <div id="report-content"></div>
       </div>
     </div>
 

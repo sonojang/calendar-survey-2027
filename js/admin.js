@@ -584,6 +584,11 @@
     return `<span class="down">${Math.abs(d).toLocaleString('ko-KR')} ▼</span>`;
   }
 
+  // 연도별 신청 단위 환산 — 박스 단위 저장 연도는 * 25로 부수로 환산
+  function toCopies(qty, year) {
+    return year >= BOX_UNIT_FROM_YEAR ? Number(qty || 0) * COPIES_PER_BOX : Number(qty || 0);
+  }
+
   function renderReport() {
     const el = document.getElementById('report-content');
     if (!el) return;
@@ -628,8 +633,9 @@
       const k = `${division}|${team}`;
       const a = domA.get(k) || {};
       const b = domB.get(k) || {};
-      const aJ = a.jangkum_b_qty || 0, aH = a.heunga_b_qty || 0;
-      const bJ = b.jangkum_b_qty || 0, bH = b.heunga_b_qty || 0;
+      // 저장된 값이 박스인지 부수인지에 따라 부수로 환산
+      const aJ = toCopies(a.jangkum_b_qty, yA), aH = toCopies(a.heunga_b_qty, yA);
+      const bJ = toCopies(b.jangkum_b_qty, yB), bH = toCopies(b.heunga_b_qty, yB);
       // 두 해 모두 0인 팀은 표시에서 생략 (마스터에 있지만 데이터 없음)
       if (aJ === 0 && aH === 0 && bJ === 0 && bH === 0) return null;
       sumAJ += aJ; sumAH += aH; sumBJ += bJ; sumBH += bH;
@@ -646,7 +652,7 @@
 
     const domTable = `
       <div class="report-block">
-        <h3>국내 ${yA}년 달력 신청수량 (전년 대비)</h3>
+        <h3>국내 ${yA}년 달력 신청수량 (전년 대비) · <span style="font-size:12px; font-weight:400; color:var(--text-muted)">단위: 부</span></h3>
         <table class="report-table">
           <thead>
             <tr>
@@ -702,11 +708,11 @@
       const k = `${country}|${region}`;
       const a = ovA.get(k) || {};
       const b = ovB.get(k) || {};
-      // 장금·흥아 통합 수량 (기본 + YJC 합산)
-      const aJ = (a.jangkum_qty||0) + (a.yjc_jangkum_qty||0);
-      const aH = (a.heunga_qty ||0) + (a.yjc_heunga_qty ||0);
-      const bJ = (b.jangkum_qty||0) + (b.yjc_jangkum_qty||0);
-      const bH = (b.heunga_qty ||0) + (b.yjc_heunga_qty ||0);
+      // 장금·흥아 통합 수량 (기본 + YJC 합산) → 부수로 환산
+      const aJ = toCopies((a.jangkum_qty||0) + (a.yjc_jangkum_qty||0), yA);
+      const aH = toCopies((a.heunga_qty ||0) + (a.yjc_heunga_qty ||0), yA);
+      const bJ = toCopies((b.jangkum_qty||0) + (b.yjc_jangkum_qty||0), yB);
+      const bH = toCopies((b.heunga_qty ||0) + (b.yjc_heunga_qty ||0), yB);
       if (aJ === 0 && aH === 0 && bJ === 0 && bH === 0) return null;
       osAJ += aJ; osAH += aH; osBJ += bJ; osBH += bH;
       const countryCell = (country !== lastCountry) ? `<td class="left group">${esc(country)}</td>` : `<td class="left"></td>`;
@@ -722,7 +728,7 @@
 
     const ovTable = `
       <div class="report-block">
-        <h3>해외 ${yA}년 달력 신청수량 (전년 대비)</h3>
+        <h3>해외 ${yA}년 달력 신청수량 (전년 대비) · <span style="font-size:12px; font-weight:400; color:var(--text-muted)">단위: 부</span></h3>
         <table class="report-table">
           <thead>
             <tr>
@@ -749,7 +755,7 @@
           </tbody>
         </table>
         <p style="font-size:12px; color:var(--text-muted); margin:6px 0 0">
-          * 해외 수량은 <b>기본 + YJC</b> 합산 기준입니다.
+          * 해외 수량은 <b>기본 + YJC</b> 합산 기준입니다. · 신청 시 <b>1 BOX = ${COPIES_PER_BOX}부</b>로 자동 환산 표시.
         </p>
       </div>`;
 
@@ -759,7 +765,7 @@
     const totA = totAJ + totAH, totB = totBJ + totBH;
     const totalTable = `
       <div class="report-block">
-        <h3>전체 합계 (국내 + 해외)</h3>
+        <h3>전체 합계 (국내 + 해외) · <span style="font-size:12px; font-weight:400; color:var(--text-muted)">단위: 부</span></h3>
         <table class="report-table">
           <thead>
             <tr>

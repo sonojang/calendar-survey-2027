@@ -592,10 +592,10 @@ tr:hover td { background: #fafbfc; }
     background: transparent !important;
   }
 
-  /* 문서 헤더 */
+  /* 문서 헤더 — 아래쪽 4cm 여백으로 국내 섹션과 간격 */
   .report-header {
     padding: 0 0 12px;
-    margin-bottom: 16px;
+    margin-bottom: 40mm !important;
     border-bottom: 2px solid #003876 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
@@ -615,13 +615,12 @@ tr:hover td { background: #fafbfc; }
 
   /* 각 섹션 페이지 나누기 */
   .report-section {
-    page-break-inside: avoid;
-    break-inside: avoid;
     margin-bottom: 16px !important;
   }
+  /* 해외(02) · 종합(03) 섹션은 강제로 새 페이지에서 시작 */
   .report-section.page-break {
-    page-break-before: always;
-    break-before: page;
+    page-break-before: always !important;
+    break-before: page !important;
   }
   .section-head {
     border-bottom: 1.5px solid #003876 !important;

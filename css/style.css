@@ -449,13 +449,15 @@ tr:hover td { background: #fafbfc; }
   .site-footer,
   .tabs,
   .tab-panel:not(#panel-report),
+  .admin-toolbar,
   .report-toolbar,
   #stats-summary,
   #network-image-admin,
   #login-modal,
   #edit-modal,
   .row-actions,
-  .col-actions {
+  .col-actions,
+  nav {
     display: none !important;
   }
   body {
@@ -464,7 +466,21 @@ tr:hover td { background: #fafbfc; }
     font-size: 11px;
   }
   .container { max-width: 100%; margin: 0; padding: 0; }
-  .card { box-shadow: none; padding: 0; margin: 0; border: 0; }
+  .card {
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: transparent;
+  }
+  /* 보고자료 영역만 화면 폭 꽉 채우기 — 좌우 여백/그림자 제거 */
+  #panel-report,
+  #report-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    background: transparent !important;
+  }
 
   /* 상단 제목 */
   .report-title {
@@ -485,9 +501,11 @@ tr:hover td { background: #fafbfc; }
 
   /* 각 표 블록 — 페이지 사이 잘리지 않게 */
   .report-block {
-    box-shadow: none;
-    padding: 0;
+    box-shadow: none !important;
+    padding: 0 !important;
     margin: 0 0 18px !important;
+    background: transparent !important;
+    overflow: visible !important;
     page-break-inside: avoid;
     break-inside: avoid;
   }
@@ -498,10 +516,12 @@ tr:hover td { background: #fafbfc; }
     margin: 0 0 8px !important;
   }
 
-  /* 표 자체 */
+  /* 표 자체 — 화면 폭 꽉 채우고 min-width 리셋 */
   .report-table {
     font-size: 10px;
-    width: 100%;
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: auto;
   }
   .report-table th, .report-table td { padding: 3px 5px; }
   .report-table thead th {

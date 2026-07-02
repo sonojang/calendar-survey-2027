@@ -811,7 +811,8 @@
       </div>`;
 
     el.innerHTML = `
-      <h2 style="margin:0 0 16px; color:var(--primary)">${yA}년 달력 신청수량 보고자료</h2>
+      <h1 class="report-title">${yA}년 달력 신청수량 보고자료</h1>
+      <div class="report-meta">장금상선 · 흥아라인 · 총무팀 &nbsp;|&nbsp; ${new Date().toLocaleDateString('ko-KR')}</div>
       ${domTable}
       ${ovTable}
       ${totalTable}

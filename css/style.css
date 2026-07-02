@@ -274,6 +274,20 @@ tr:hover td { background: #fafbfc; }
 }
 
 /* ---------- 보고자료 탭 ---------- */
+.report-title {
+  text-align: center;
+  color: var(--primary);
+  font-size: 24px;
+  margin: 0 0 6px;
+  letter-spacing: -0.5px;
+}
+.report-meta {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-bottom: 20px;
+}
+
 .report-toolbar {
   display: flex;
   align-items: center;
@@ -428,37 +442,100 @@ tr:hover td { background: #fafbfc; }
 
 /* ---------- 인쇄용 ---------- */
 @media print {
+  @page { size: A4; margin: 12mm 10mm; }
+
+  /* 사장님 보고자료로 사용 → 인쇄 시 보고자료 이외 요소는 모두 숨김 */
   .site-header,
   .site-footer,
   .tabs,
-  .tab-panel:not(.active),
+  .tab-panel:not(#panel-report),
   .report-toolbar,
   #stats-summary,
-  #network-image-admin {
+  #network-image-admin,
+  #login-modal,
+  #edit-modal,
+  .row-actions,
+  .col-actions {
     display: none !important;
   }
-  body { background: #fff; }
+  body {
+    background: #fff;
+    color: #000;
+    font-size: 11px;
+  }
   .container { max-width: 100%; margin: 0; padding: 0; }
-  .card { box-shadow: none; padding: 0; margin: 0; }
+  .card { box-shadow: none; padding: 0; margin: 0; border: 0; }
+
+  /* 상단 제목 */
+  .report-title {
+    text-align: center;
+    color: #000 !important;
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    margin: 0 0 6px !important;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #000;
+  }
+  .report-meta {
+    text-align: center;
+    font-size: 10px !important;
+    color: #444 !important;
+    margin-bottom: 16px !important;
+  }
+
+  /* 각 표 블록 — 페이지 사이 잘리지 않게 */
   .report-block {
     box-shadow: none;
     padding: 0;
+    margin: 0 0 18px !important;
     page-break-inside: avoid;
-    margin-bottom: 20px;
+    break-inside: avoid;
   }
+  .report-block h3 {
+    color: #000 !important;
+    border-left-color: #000 !important;
+    font-size: 13px !important;
+    margin: 0 0 8px !important;
+  }
+
+  /* 표 자체 */
   .report-table {
-    font-size: 11px;
+    font-size: 10px;
+    width: 100%;
   }
-  .report-table th, .report-table td { padding: 4px 6px; }
+  .report-table th, .report-table td { padding: 3px 5px; }
   .report-table thead th {
     background: #003876 !important;
     color: #fff !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+  .report-table thead tr:nth-child(2) th {
+    background: #1e5bb8 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
   .report-table tbody tr.total td {
     background: #003876 !important;
     color: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .report-table .group {
+    background: #f0f3f7 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .report-table .up   { color: #b71c1c !important; }
+  .report-table .down { color: #0d47a1 !important; }
+
+  /* 요약 문구 강조 */
+  .report-summary {
+    background: #fff !important;
+    border: 1.5px solid #003876 !important;
+    color: #000 !important;
+    padding: 10px 14px !important;
+    font-size: 11px !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }

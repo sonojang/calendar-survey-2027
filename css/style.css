@@ -242,6 +242,20 @@ tr:hover td { background: #fafbfc; }
   margin-bottom: 16px;
   max-width: 100%;
 }
+
+/* 전체 조회(관리자) 대시보드의 표 — 세로 스크롤 + 헤더 sticky */
+/* 보고자료(#panel-report) 탭은 제외 */
+#dashboard .tab-panel:not(#panel-report) .table-wrap {
+  max-height: 520px;
+  overflow-y: auto;
+}
+#dashboard .tab-panel:not(#panel-report) .table-wrap thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f0f3f7;
+  box-shadow: 0 2px 0 rgba(0,0,0,0.05);
+}
 /* 테이블은 컨텐츠 기반 폭 — 부모보다 넓으면 자동으로 좌우 스크롤 */
 .table-wrap table {
   width: max-content;

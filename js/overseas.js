@@ -283,6 +283,97 @@
     qtyCalInfo.style.display = 'none';
   });
 
+  /* ==========================================================
+     ① 탭 임시저장 (localStorage)
+  ========================================================== */
+  const OVR_DRAFT_KEY = 'overseas_qty';
+  const ovrDraftBannerEl = document.getElementById('qty-draft-banner');
+
+  function ovrGetSnapshot() {
+    return {
+      // 입력자 정보 (모든 탭 공용이지만 여기서도 저장)
+      submitter_company:        subCompanySel.value,
+      submitter_branch_country: subCountrySel.value,
+      submitter_branch_country_custom: subCountryCustom.value,
+      submitter_branch_region:  subRegionSel.value,
+      submitter_branch_region_custom:  subRegionCustom.value,
+      submitter_name:  document.getElementById('submitter_name').value,
+      submitter_email: document.getElementById('submitter_email').value,
+      // 수량·배송정보
+      qty_company:  qtyCompanySel.value,
+      qty_country:  qtyCountrySel.value,
+      qty_country_custom: qtyCountryCustom.value,
+      qty_region:   qtyRegionSel.value,
+      qty_region_custom:  qtyRegionCustom.value,
+      qty_custom_caltype: document.getElementById('qty-custom-caltype') ? document.getElementById('qty-custom-caltype').value : '',
+      qty_jangkum:  document.getElementById('qty-jangkum').value,
+      qty_heunga:   document.getElementById('qty-heunga').value,
+      qty_yjc_jangkum: document.getElementById('qty-yjc-jangkum').value,
+      qty_yjc_heunga:  document.getElementById('qty-yjc-heunga').value,
+      qty_shipping_method: qtyShipping.value,
+      qty_address:  document.getElementById('qty-address').value,
+      qty_port_code:document.getElementById('qty-port-code').value,
+      qty_pic_name: document.getElementById('qty-pic-name').value,
+      qty_pic_contact: document.getElementById('qty-pic-contact').value,
+      qty_note:     document.getElementById('qty-note').value
+    };
+  }
+  function ovrRestore(d) {
+    if (!d) return;
+    // 입력자 정보
+    if (d.submitter_company) subCompanySel.value = d.submitter_company;
+    if (d.submitter_branch_country) {
+      subCountrySel.value = d.submitter_branch_country;
+      subCountrySel.dispatchEvent(new Event('change'));
+      if (d.submitter_branch_country_custom) subCountryCustom.value = d.submitter_branch_country_custom;
+      if (d.submitter_branch_region) {
+        subRegionSel.value = d.submitter_branch_region;
+        subRegionSel.dispatchEvent(new Event('change'));
+        if (d.submitter_branch_region_custom) subRegionCustom.value = d.submitter_branch_region_custom;
+      }
+    }
+    if (d.submitter_name)  document.getElementById('submitter_name').value  = d.submitter_name;
+    if (d.submitter_email) document.getElementById('submitter_email').value = d.submitter_email;
+    // 수량·배송
+    if (d.qty_company) { qtyCompanySel.value = d.qty_company; qtyCompanySel.dispatchEvent(new Event('change')); }
+    if (d.qty_country) {
+      qtyCountrySel.value = d.qty_country;
+      qtyCountrySel.dispatchEvent(new Event('change'));
+      if (d.qty_country_custom) qtyCountryCustom.value = d.qty_country_custom;
+      if (d.qty_region) {
+        qtyRegionSel.value = d.qty_region;
+        qtyRegionSel.dispatchEvent(new Event('change'));
+        if (d.qty_region_custom) qtyRegionCustom.value = d.qty_region_custom;
+      }
+    }
+    const caltypeEl = document.getElementById('qty-custom-caltype');
+    if (caltypeEl && d.qty_custom_caltype) caltypeEl.value = d.qty_custom_caltype;
+    if (d.qty_jangkum != null)     document.getElementById('qty-jangkum').value = d.qty_jangkum;
+    if (d.qty_heunga != null)      document.getElementById('qty-heunga').value  = d.qty_heunga;
+    if (d.qty_yjc_jangkum != null) document.getElementById('qty-yjc-jangkum').value = d.qty_yjc_jangkum;
+    if (d.qty_yjc_heunga != null)  document.getElementById('qty-yjc-heunga').value  = d.qty_yjc_heunga;
+    if (d.qty_shipping_method) qtyShipping.value = d.qty_shipping_method;
+    if (d.qty_address)   document.getElementById('qty-address').value   = d.qty_address;
+    if (d.qty_port_code) document.getElementById('qty-port-code').value = d.qty_port_code;
+    if (d.qty_pic_name)  document.getElementById('qty-pic-name').value  = d.qty_pic_name;
+    if (d.qty_pic_contact) document.getElementById('qty-pic-contact').value = d.qty_pic_contact;
+    if (d.qty_note)      document.getElementById('qty-note').value      = d.qty_note;
+
+    const msg = document.getElementById('qty-msg');
+    msg.innerHTML = `<div class="alert alert-info">임시저장한 내용을 불러왔습니다. 확인 후 제출하세요.</div>`;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  const ovrDraftBanner = window.Draft ? Draft.mountBanner(OVR_DRAFT_KEY, ovrDraftBannerEl, ovrRestore) : null;
+
+  document.getElementById('qty-draft-save').addEventListener('click', () => {
+    if (!window.Draft) return;
+    Draft.save(OVR_DRAFT_KEY, ovrGetSnapshot());
+    if (ovrDraftBanner) ovrDraftBanner.rerender();
+    const msg = document.getElementById('qty-msg');
+    msg.innerHTML = `<div class="alert alert-success">✓ 임시저장 완료. 페이지 닫아도 유지됩니다 (같은 브라우저 기준).</div>`;
+    setTimeout(() => { msg.innerHTML = ''; }, 3000);
+  });
+
   qtyRegionSel.addEventListener('change', () => {
     // 지역 직접 입력 선택
     if (qtyRegionSel.value === CUSTOM_VAL) {
@@ -405,6 +496,7 @@
       ✓ ${company} - ${country} ${region} 제출 완료.<br>
       <small>다른 회사 달력도 신청하려면 회사를 바꿔서 다시 제출해 주세요.</small>
     </div>`;
+    if (window.Draft) { Draft.clear(OVR_DRAFT_KEY); if (ovrDraftBanner) ovrDraftBanner.rerender(); }
     document.getElementById('qty-form').reset();
     qtyRegionSel.disabled = true;
     qtyRegionSel.innerHTML = '<option value="">먼저 국가를 선택하세요</option>';

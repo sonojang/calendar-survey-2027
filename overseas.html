@@ -83,6 +83,8 @@
         변경시 총무팀에 문의해 주세요.
       </div>
 
+      <div id="qty-draft-banner"></div>
+
       <form id="qty-form">
         <div class="form-row">
           <div class="form-group">
@@ -193,7 +195,10 @@
         </div>
 
         <div id="qty-msg"></div>
-        <button class="btn btn-primary btn-block" type="submit" id="qty-submit" data-i18n="common.submit">제출하기</button>
+        <div class="submit-row">
+          <button class="btn btn-draft" type="button" id="qty-draft-save" data-i18n="common.draft_save">💾 임시저장</button>
+          <button class="btn btn-primary" type="submit" id="qty-submit" data-i18n="common.submit">제출하기</button>
+        </div>
       </form>
     </div>
 
@@ -338,6 +343,7 @@
 <script src="js/config.js"></script>
 <script src="js/data.js"></script>
 <script src="js/i18n.js"></script>
+<script src="js/draft.js"></script>
 <script src="js/overseas.js"></script>
 <script src="js/history-modal.js"></script>
 </body>

@@ -56,6 +56,7 @@
       'history.empty':         '아직 과거 신청 데이터가 없습니다.',
       'common.query_error':    '조회 오류',
       'common.delete_short':   '×',
+      'common.draft_save':     '💾 임시저장',
 
       /* ---------- 인덱스 ---------- */
       'idx.title':             '2027년 달력 제작 조사',
@@ -317,6 +318,7 @@
       'history.year':          'Year',
       'history.empty':         'No historical data yet.',
       'common.query_error':    'Query error',
+      'common.draft_save':     '💾 Save Draft',
       'common.delete_short':   '×',
 
       /* ---------- Index ---------- */

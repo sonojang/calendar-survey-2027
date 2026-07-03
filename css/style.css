@@ -476,6 +476,40 @@ tr:hover td { background: #fafbfc; }
 .summary-card .card-diff.up   { color: #1b8a3a; background: #e6f4ea; }
 .summary-card .card-diff.neutral { color: #666; background: #f0f3f7; }
 
+/* ---------- 임시저장 배너 ---------- */
+.draft-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-left: 4px solid #f57c00;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.draft-icon { font-size: 18px; }
+.draft-msg  { flex: 1; font-size: 13px; color: #333; }
+.draft-msg small { color: var(--text-muted); margin-left: 6px; font-size: 11px; }
+.draft-banner .btn-sm { margin: 0; }
+
+.btn-draft {
+  background: #eef2f7;
+  color: var(--primary);
+  border: 1px solid #d0d8e2;
+}
+.btn-draft:hover { background: #dde3ea; }
+
+/* 폼 하단 버튼 그룹 (임시저장 + 제출) */
+.submit-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.submit-row .btn-primary { flex: 1; min-width: 180px; }
+
 /* ---------- 편집 모달 (관리자 로그인 · 응답 수정) ---------- */
 .edit-modal {
   position: fixed;

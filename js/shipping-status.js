@@ -992,4 +992,114 @@
   if (domSearch)  domSearch.addEventListener('input', renderDomesticPicks);
   if (domRefresh) domRefresh.addEventListener('click', loadDomesticPicks);
 
+  /* ==========================================================
+     발송 등록 임시저장 (localStorage)
+     - 등록자 정보 + 해외 반복 행 + 국내 반복 행 통합 저장
+  ========================================================== */
+  const SHIP_DRAFT_KEY = 'shipping';
+  const shipDraftBannerEl = document.getElementById('ship-draft-banner');
+
+  function shipCollectRows(container, fieldMap) {
+    return [...container.querySelectorAll('.repeat-group')].map(row => {
+      const out = {};
+      for (const [key, selector] of Object.entries(fieldMap)) {
+        const el = row.querySelector(selector);
+        if (el) out[key] = el.value;
+      }
+      return out;
+    });
+  }
+  const SHIP_OV_FIELDS = {
+    company: '.s-company', country: '.s-country', country_custom: '.s-country-custom',
+    region: '.s-region', region_custom: '.s-region-custom',
+    etd: '.s-etd', eta: '.s-eta', bl: '.s-bl', vessel: '.s-vessel', note: '.s-note'
+  };
+  const SHIP_DOM_FIELDS = {
+    company: '.d-company', division: '.d-division', team: '.d-team',
+    eta: '.d-eta', qty: '.d-qty', driver: '.d-driver', note: '.d-note'
+  };
+
+  function shipGetSnapshot() {
+    return {
+      submitter_name:  document.getElementById('submitter_name').value,
+      submitter_email: document.getElementById('submitter_email').value,
+      submitter_office:document.getElementById('submitter_office').value,
+      overseas: shipRows ? shipCollectRows(shipRows, SHIP_OV_FIELDS) : [],
+      domestic: domShipRows ? shipCollectRows(domShipRows, SHIP_DOM_FIELDS) : []
+    };
+  }
+  function shipRestore(d) {
+    if (!d) return;
+    if (d.submitter_name)  document.getElementById('submitter_name').value  = d.submitter_name;
+    if (d.submitter_email) document.getElementById('submitter_email').value = d.submitter_email;
+    if (d.submitter_office)document.getElementById('submitter_office').value= d.submitter_office;
+
+    // 해외 행 복원
+    if (Array.isArray(d.overseas) && d.overseas.length && shipRows) {
+      shipRows.innerHTML = '';
+      d.overseas.forEach(rec => {
+        addShipRow();
+        const row = shipRows.lastElementChild;
+        for (const [key, selector] of Object.entries(SHIP_OV_FIELDS)) {
+          if (rec[key] == null) continue;
+          const el = row.querySelector(selector);
+          if (!el) continue;
+          el.value = rec[key];
+          if (['.s-country', '.s-region'].includes(selector)) el.dispatchEvent(new Event('change'));
+        }
+      });
+    }
+    // 국내 행 복원
+    if (Array.isArray(d.domestic) && d.domestic.length && domShipRows) {
+      domShipRows.innerHTML = '';
+      d.domestic.forEach(rec => {
+        addDomShipRow();
+        const row = domShipRows.lastElementChild;
+        for (const [key, selector] of Object.entries(SHIP_DOM_FIELDS)) {
+          if (rec[key] == null) continue;
+          const el = row.querySelector(selector);
+          if (!el) continue;
+          el.value = rec[key];
+          if (['.d-company', '.d-division'].includes(selector)) el.dispatchEvent(new Event('change'));
+          // 종속 select는 change 이벤트 후에도 다시 채워야 함
+          if (selector === '.d-division' && rec.team) {
+            setTimeout(() => { row.querySelector('.d-team').value = rec.team; }, 0);
+          }
+        }
+      });
+    }
+    alert('임시저장한 발송 등록 내용을 불러왔습니다. 확인 후 등록하세요.');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  const shipDraftBanner = window.Draft ? Draft.mountBanner(SHIP_DRAFT_KEY, shipDraftBannerEl, shipRestore) : null;
+
+  const shipDraftBtn = document.getElementById('ship-draft-save');
+  const domShipDraftBtn = document.getElementById('dom-ship-draft-save');
+  function shipDoSave(msgAreaId) {
+    if (!window.Draft) return;
+    Draft.save(SHIP_DRAFT_KEY, shipGetSnapshot());
+    if (shipDraftBanner) shipDraftBanner.rerender();
+    const msg = document.getElementById(msgAreaId);
+    if (msg) {
+      msg.innerHTML = `<div class="alert alert-success">✓ 임시저장 완료. 페이지 닫아도 유지됩니다 (같은 브라우저 기준).</div>`;
+      setTimeout(() => { msg.innerHTML = ''; }, 3000);
+    }
+  }
+  if (shipDraftBtn)    shipDraftBtn.addEventListener('click',    () => shipDoSave('ship-msg'));
+  if (domShipDraftBtn) domShipDraftBtn.addEventListener('click', () => shipDoSave('dom-ship-msg'));
+
+  // 제출 성공 후 draft 삭제 (기존 submit 리스너 실행 후 감시)
+  // 각 submit 리스너가 성공 시 msg에 "등록되었습니다" 를 넣으므로 그것을 관찰
+  const observeSuccess = (msgId) => {
+    const el = document.getElementById(msgId);
+    if (!el) return;
+    new MutationObserver(() => {
+      if (el.querySelector('.alert-success') && el.textContent.includes('등록되었습니다')) {
+        if (window.Draft) { Draft.clear(SHIP_DRAFT_KEY); if (shipDraftBanner) shipDraftBanner.rerender(); }
+      }
+    }).observe(el, { childList: true, subtree: true });
+  };
+  observeSuccess('ship-msg');
+  observeSuccess('dom-ship-msg');
+
 })();

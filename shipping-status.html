@@ -96,6 +96,8 @@
         <button type="button" class="scope-btn" data-scope="domestic" data-target="ship" data-i18n="ship.scope_domestic_reg">🇰🇷 국내 발송 등록</button>
       </div>
 
+      <div id="ship-draft-banner"></div>
+
       <!-- 등록자 정보 (국내·해외 공통) -->
       <div class="card" style="background:#f7f9fc; box-shadow:none; padding:14px; margin-bottom:16px">
         <h3 style="margin:0 0 8px; font-size:14px; color:var(--primary)" data-i18n="ship.submitter_h">등록자 정보</h3>
@@ -143,7 +145,10 @@
           <button type="button" class="add-row-btn" id="ship-add" data-i18n="ship.add_row">+ 발송 건 추가</button>
 
           <div id="ship-msg"></div>
-          <button class="btn btn-primary btn-block" type="submit" id="ship-submit" style="margin-top:12px" data-i18n="ship.submit_all">전체 등록</button>
+          <div class="submit-row">
+            <button class="btn btn-draft" type="button" id="ship-draft-save" data-i18n="common.draft_save">💾 임시저장</button>
+            <button class="btn btn-primary" type="submit" id="ship-submit" data-i18n="ship.submit_all">전체 등록</button>
+          </div>
         </form>
       </div>
 
@@ -173,7 +178,10 @@
           <button type="button" class="add-row-btn" id="dom-ship-add" data-i18n="ship.add_row">+ 발송 건 추가</button>
 
           <div id="dom-ship-msg"></div>
-          <button class="btn btn-primary btn-block" type="submit" id="dom-ship-submit" style="margin-top:12px" data-i18n="ship.submit_all">전체 등록</button>
+          <div class="submit-row">
+            <button class="btn btn-draft" type="button" id="dom-ship-draft-save" data-i18n="common.draft_save">💾 임시저장</button>
+            <button class="btn btn-primary" type="submit" id="dom-ship-submit" data-i18n="ship.submit_all">전체 등록</button>
+          </div>
         </form>
       </div>
     </div>
@@ -189,6 +197,7 @@
 <script src="js/config.js"></script>
 <script src="js/data.js"></script>
 <script src="js/i18n.js"></script>
+<script src="js/draft.js"></script>
 <script src="js/shipping-status.js"></script>
 </body>
 </html>

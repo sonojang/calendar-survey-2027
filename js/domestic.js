@@ -10,6 +10,46 @@
   const msg        = document.getElementById('msg-area');
   const submitBtn  = document.getElementById('submit-btn');
 
+  /* --- 임시저장 --- */
+  const DRAFT_KEY = 'domestic';
+  const draftBannerEl = document.getElementById('draft-banner');
+
+  function getFormSnapshot() {
+    return {
+      company:         companySel.value,
+      division:        divSel.value,
+      team:            teamSel.value,
+      jangkum_b_qty:   document.getElementById('jangkum_b_qty').value,
+      heunga_b_qty:    document.getElementById('heunga_b_qty').value,
+      submitter_name:  document.getElementById('submitter_name').value,
+      submitter_email: document.getElementById('submitter_email').value,
+      note:            document.getElementById('note').value
+    };
+  }
+  function restoreDraft(d) {
+    if (!d) return;
+    // 회사 → 본부 → 팀 순서 (드롭다운이 종속됨)
+    if (d.company) { companySel.value = d.company; repopulateDivision(); }
+    if (d.division) { divSel.value = d.division; repopulateTeam(); }
+    if (d.team) { teamSel.value = d.team; }
+    document.getElementById('jangkum_b_qty').value = d.jangkum_b_qty || '0';
+    document.getElementById('heunga_b_qty').value  = d.heunga_b_qty  || '0';
+    document.getElementById('submitter_name').value  = d.submitter_name  || '';
+    document.getElementById('submitter_email').value = d.submitter_email || '';
+    document.getElementById('note').value = d.note || '';
+    msg.innerHTML = `<div class="alert alert-info">임시저장한 내용을 불러왔습니다. 확인 후 제출하세요.</div>`;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  const draftBanner = window.Draft ? Draft.mountBanner(DRAFT_KEY, draftBannerEl, restoreDraft) : null;
+
+  document.getElementById('draft-save-btn').addEventListener('click', () => {
+    if (!window.Draft) return;
+    Draft.save(DRAFT_KEY, getFormSnapshot());
+    if (draftBanner) draftBanner.rerender();
+    msg.innerHTML = `<div class="alert alert-success">✓ 임시저장 완료. 페이지 닫아도 유지됩니다 (같은 브라우저 기준).</div>`;
+    setTimeout(() => { msg.innerHTML = ''; }, 3000);
+  });
+
   function populateCompany() {
     const cur = companySel.value;
     companySel.innerHTML = `<option value="">${_t('common.select')}</option>` +
@@ -99,6 +139,7 @@
       ✓ 제출이 완료되었습니다. 감사합니다.<br>
       <small>추가 또는 수정이 필요하면 다시 제출하시면 됩니다 (최신 응답 기준).</small>
     </div>`;
+    if (window.Draft) { Draft.clear(DRAFT_KEY); if (draftBanner) draftBanner.rerender(); }
     form.reset();
     divSel.disabled = true;
     divSel.innerHTML = '<option value="">먼저 회사를 선택하세요</option>';

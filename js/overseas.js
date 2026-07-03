@@ -315,17 +315,18 @@
     ovrEditBannerEl.innerHTML = `
       <div class="edit-mode-banner">
         <span>✏️</span>
-        <span class="msg"><b>수정 모드</b> — 기존 응답을 불러왔습니다. 수정 후 제출하면 <b>기존 응답이 덮어쓰기</b>됩니다.</span>
-        <button type="button" class="btn btn-secondary btn-sm" id="qty-exit-edit-mode">취소</button>
+        <span class="msg"><b>${_t('edit.mode_title')}</b> — ${_t('edit.mode_desc')}</span>
+        <button type="button" class="btn btn-secondary btn-sm" id="qty-exit-edit-mode">${_t('common.cancel')}</button>
       </div>`;
+    const submitBtn = document.getElementById('qty-submit');
     document.getElementById('qty-exit-edit-mode').addEventListener('click', () => {
       ovrEditingId = null;
       ovrEditBannerEl.innerHTML = '';
       document.getElementById('qty-form').reset();
+      if (submitBtn) submitBtn.textContent = _t('common.submit');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
-    const submitBtn = document.getElementById('qty-submit');
-    if (submitBtn) submitBtn.textContent = '수정 저장';
+    if (submitBtn) submitBtn.textContent = _t('edit.save');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -422,7 +423,7 @@
     if (d.qty_note)      document.getElementById('qty-note').value      = d.qty_note;
 
     const msg = document.getElementById('qty-msg');
-    msg.innerHTML = `<div class="alert alert-info">임시저장한 내용을 불러왔습니다. 확인 후 제출하세요.</div>`;
+    msg.innerHTML = `<div class="alert alert-info">${_t('draft.restored_msg')}</div>`;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   const ovrDraftBanner = window.Draft ? Draft.mountBanner(OVR_DRAFT_KEY, ovrDraftBannerEl, ovrRestore) : null;
@@ -432,7 +433,7 @@
     Draft.save(OVR_DRAFT_KEY, ovrGetSnapshot());
     if (ovrDraftBanner) ovrDraftBanner.rerender();
     const msg = document.getElementById('qty-msg');
-    msg.innerHTML = `<div class="alert alert-success">✓ 임시저장 완료. 페이지 닫아도 유지됩니다 (같은 브라우저 기준).</div>`;
+    msg.innerHTML = `<div class="alert alert-success">${_t('draft.save_success')}</div>`;
     setTimeout(() => { msg.innerHTML = ''; }, 3000);
   });
 
@@ -561,7 +562,7 @@
     }
 
     btn.disabled = false;
-    btn.innerHTML = ovrEditingId ? '수정 저장' : '제출하기';
+    btn.innerHTML = ovrEditingId ? _t('edit.save') : _t('common.submit');
 
     if (error) {
       msg.innerHTML = `<div class="alert alert-danger">${ovrEditingId ? '수정' : '제출'} 오류: ${error.message}</div>`;
@@ -574,7 +575,7 @@
     if (window.Draft) { Draft.clear(OVR_DRAFT_KEY); if (ovrDraftBanner) ovrDraftBanner.rerender(); }
     ovrEditingId = null;
     ovrEditBannerEl.innerHTML = '';
-    btn.textContent = '제출하기';
+    btn.textContent = _t('common.submit');
     document.getElementById('qty-form').reset();
     qtyRegionSel.disabled = true;
     qtyRegionSel.innerHTML = '<option value="">먼저 국가를 선택하세요</option>';

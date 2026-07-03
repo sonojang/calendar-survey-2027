@@ -57,6 +57,36 @@
       'common.query_error':    '조회 오류',
       'common.delete_short':   '×',
       'common.draft_save':     '💾 임시저장',
+      'common.my_entries_btn': '📝 내 이전 신청 조회·수정',
+      'common.load':           '불러오기',
+      'common.discard':        '삭제',
+      'common.close':          '닫기',
+      'common.search':         '🔍 조회',
+
+      // 임시저장 배너/알림
+      'draft.saved_msg':       '임시저장된 자료가 있습니다',
+      'draft.discard_confirm': '임시저장 자료를 삭제하시겠습니까?',
+      'draft.save_success':    '✓ 임시저장 완료. 페이지 닫아도 유지됩니다 (같은 브라우저 기준).',
+      'draft.restored_msg':    '임시저장한 내용을 불러왔습니다. 확인 후 제출하세요.',
+      'draft.ship_restored':   '임시저장한 발송 등록 내용을 불러왔습니다. 확인 후 등록하세요.',
+
+      // 내 이전 신청 조회 모달
+      'my.title':              '📝 내 이전 신청 조회·수정',
+      'my.desc':               '본인이 이전에 입력한 이메일로 조회합니다. 결과에서 [불러오기]를 클릭하면 폼에 값이 채워지고, 그대로 수정 후 다시 제출하면 <b>기존 응답이 덮어쓰기</b>됩니다.',
+      'my.email_ph':           '입력 시 사용한 이메일',
+      'my.email_required':     '이메일을 입력해 주세요.',
+      'my.searching':          '조회 중...',
+      'my.no_results':         '해당 이메일로 신청한 응답이 없습니다.',
+      'my.results_msg':        '{n}건의 응답이 검색되었습니다. 수정할 항목을 선택하세요.',
+      'my.picked_overseas_err':'선택한 항목은 국내 발송입니다.',
+      'my.picked_domestic_err':'선택한 항목은 해외 발송입니다.',
+
+      // 수정 모드 배너
+      'edit.mode_title':       '수정 모드',
+      'edit.mode_desc':        '기존 응답을 불러왔습니다. 수정 후 제출하면 <b>기존 응답이 덮어쓰기</b>됩니다.',
+      'edit.mode_desc_ship_ov':'이전 해외 발송 등록을 불러왔습니다. 수정 후 등록하면 <b>기존 등록이 덮어쓰기</b>됩니다.',
+      'edit.mode_desc_ship_dom':'이전 국내 발송 등록을 불러왔습니다. 수정 후 등록하면 <b>기존 등록이 덮어쓰기</b>됩니다.',
+      'edit.save':             '수정 저장',
 
       /* ---------- 인덱스 ---------- */
       'idx.title':             '2027년 달력 제작 조사',
@@ -319,6 +349,36 @@
       'history.empty':         'No historical data yet.',
       'common.query_error':    'Query error',
       'common.draft_save':     '💾 Save Draft',
+      'common.my_entries_btn': '📝 View/Edit My Entries',
+      'common.load':           'Load',
+      'common.discard':        'Discard',
+      'common.close':          'Close',
+      'common.search':         '🔍 Search',
+
+      // 임시저장 배너/알림
+      'draft.saved_msg':       'You have a saved draft',
+      'draft.discard_confirm': 'Delete the saved draft?',
+      'draft.save_success':    '✓ Draft saved. It stays even after closing the page (same browser).',
+      'draft.restored_msg':    'Draft restored. Review and submit.',
+      'draft.ship_restored':   'Shipping registration draft restored. Review and register.',
+
+      // 내 이전 신청 조회 모달
+      'my.title':              '📝 View/Edit My Entries',
+      'my.desc':               'Search by the email you used earlier. Click [Load] to fill the form with the entry — modify and resubmit to <b>overwrite the original response</b>.',
+      'my.email_ph':           'Email used at submission',
+      'my.email_required':     'Please enter an email.',
+      'my.searching':          'Searching...',
+      'my.no_results':         'No entries found for this email.',
+      'my.results_msg':        '{n} entries found. Select one to edit.',
+      'my.picked_overseas_err':'The selected item is a domestic shipment.',
+      'my.picked_domestic_err':'The selected item is an overseas shipment.',
+
+      // 수정 모드 배너
+      'edit.mode_title':       'Edit Mode',
+      'edit.mode_desc':        'Loaded an existing response. Submitting will <b>overwrite the original</b>.',
+      'edit.mode_desc_ship_ov':'Loaded overseas shipping entry. Submitting will <b>overwrite the original</b>.',
+      'edit.mode_desc_ship_dom':'Loaded domestic shipping entry. Submitting will <b>overwrite the original</b>.',
+      'edit.save':             'Save Changes',
       'common.delete_short':   '×',
 
       /* ---------- Index ---------- */

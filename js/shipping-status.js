@@ -1074,12 +1074,12 @@
     shipEditBannerEl.innerHTML = `
       <div class="edit-mode-banner">
         <span>✏️</span>
-        <span class="msg"><b>수정 모드</b> — 이전 해외 발송 등록을 불러왔습니다. 수정 후 등록하면 <b>기존 등록이 덮어쓰기</b>됩니다.</span>
-        <button type="button" class="btn btn-secondary btn-sm" id="ship-exit-edit">취소</button>
+        <span class="msg"><b>${_t('edit.mode_title')}</b> — ${_t('edit.mode_desc_ship_ov')}</span>
+        <button type="button" class="btn btn-secondary btn-sm" id="ship-exit-edit">${_t('common.cancel')}</button>
       </div>`;
     document.getElementById('ship-exit-edit').addEventListener('click', shipExitEditMode);
     const btn = document.getElementById('ship-submit');
-    if (btn) btn.textContent = '수정 저장';
+    if (btn) btn.textContent = _t('edit.save');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -1108,12 +1108,12 @@
     shipEditBannerEl.innerHTML = `
       <div class="edit-mode-banner">
         <span>✏️</span>
-        <span class="msg"><b>수정 모드</b> — 이전 국내 발송 등록을 불러왔습니다. 수정 후 등록하면 <b>기존 등록이 덮어쓰기</b>됩니다.</span>
-        <button type="button" class="btn btn-secondary btn-sm" id="ship-exit-edit">취소</button>
+        <span class="msg"><b>${_t('edit.mode_title')}</b> — ${_t('edit.mode_desc_ship_dom')}</span>
+        <button type="button" class="btn btn-secondary btn-sm" id="ship-exit-edit">${_t('common.cancel')}</button>
       </div>`;
     document.getElementById('ship-exit-edit').addEventListener('click', shipExitEditMode);
     const btn = document.getElementById('dom-ship-submit');
-    if (btn) btn.textContent = '수정 저장';
+    if (btn) btn.textContent = _t('edit.save');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -1132,7 +1132,7 @@
           <small>&nbsp; | ${(r.created_at || '').substring(0, 10)}</small>`;
       },
       onSelect: (row) => {
-        if (row.division) { alert('선택한 항목은 국내 발송입니다.'); return; }
+        if (row.division) { alert(_t('my.picked_overseas_err')); return; }
         shipEnterEditModeOverseas(row);
       }
     });
@@ -1153,7 +1153,7 @@
           <small>&nbsp; | ${(r.created_at || '').substring(0, 10)}</small>`;
       },
       onSelect: (row) => {
-        if (!row.division) { alert('선택한 항목은 해외 발송입니다.'); return; }
+        if (!row.division) { alert(_t('my.picked_domestic_err')); return; }
         shipEnterEditModeDomestic(row);
       }
     });
@@ -1235,7 +1235,7 @@
         }
       });
     }
-    alert('임시저장한 발송 등록 내용을 불러왔습니다. 확인 후 등록하세요.');
+    alert(_t('draft.ship_restored'));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   const shipDraftBanner = window.Draft ? Draft.mountBanner(SHIP_DRAFT_KEY, shipDraftBannerEl, shipRestore) : null;
@@ -1248,7 +1248,7 @@
     if (shipDraftBanner) shipDraftBanner.rerender();
     const msg = document.getElementById(msgAreaId);
     if (msg) {
-      msg.innerHTML = `<div class="alert alert-success">✓ 임시저장 완료. 페이지 닫아도 유지됩니다 (같은 브라우저 기준).</div>`;
+      msg.innerHTML = `<div class="alert alert-success">${_t('draft.save_success')}</div>`;
       setTimeout(() => { msg.innerHTML = ''; }, 3000);
     }
   }

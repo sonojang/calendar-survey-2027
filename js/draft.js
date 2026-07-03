@@ -1,14 +1,7 @@
 // 폼 임시저장 공통 유틸 (localStorage 기반)
-//
-// 사용 예:
-//   Draft.save('domestic', { company: '장금상선', ... });
-//   const d = Draft.load('domestic');   // { data, savedAt } | null
-//   Draft.clear('domestic');
-//
-// UI 헬퍼:
-//   Draft.mountBanner('domestic', containerEl, (data) => { ...폼 채우기... });
 
 (function () {
+  const _t = (k) => (window.i18n ? window.i18n.t(k) : k);
   const PREFIX = 'cal2027_draft:';
 
   function save(key, data) {
@@ -38,9 +31,6 @@
     return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`;
   }
 
-  // 폼 상단에 임시저장 안내 배너 렌더링
-  // - 저장된 자료가 있으면 [불러오기] [삭제] 버튼 표시
-  // - 없으면 배너 숨김
   function mountBanner(key, containerEl, onRestore) {
     if (!containerEl) return;
 
@@ -51,23 +41,25 @@
         <div class="draft-banner">
           <span class="draft-icon">📋</span>
           <span class="draft-msg">
-            임시저장된 자료가 있습니다
+            ${_t('draft.saved_msg')}
             <small>(${fmtTime(d.savedAt)})</small>
           </span>
-          <button type="button" class="btn btn-secondary btn-sm draft-restore">불러오기</button>
-          <button type="button" class="btn btn-secondary btn-sm draft-discard">삭제</button>
+          <button type="button" class="btn btn-secondary btn-sm draft-restore">${_t('common.load')}</button>
+          <button type="button" class="btn btn-secondary btn-sm draft-discard">${_t('common.discard')}</button>
         </div>`;
       containerEl.querySelector('.draft-restore').addEventListener('click', () => {
         try { onRestore && onRestore(d.data); } catch (e) { console.error('[draft] restore', e); }
       });
       containerEl.querySelector('.draft-discard').addEventListener('click', () => {
-        if (confirm('임시저장 자료를 삭제하시겠습니까?')) {
+        if (confirm(_t('draft.discard_confirm'))) {
           clear(key);
           render();
         }
       });
     }
     render();
+    // 언어 변경 시 배너 다시 그려서 텍스트 갱신
+    document.addEventListener('langchange', render);
     return { rerender: render };
   }
 

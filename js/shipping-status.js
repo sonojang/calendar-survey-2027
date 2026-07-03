@@ -365,15 +365,25 @@
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span>등록 중...';
 
-    const { error } = await supabaseClient.from('shipping_status').insert(payloads);
+    let error;
+    if (shipEditingId && shipEditScope === 'overseas' && payloads.length === 1) {
+      // 수정 모드 → UPDATE 한 건
+      const { error: err } = await supabaseClient
+        .from('shipping_status').update(payloads[0]).eq('id', shipEditingId);
+      error = err;
+    } else {
+      const { error: err } = await supabaseClient.from('shipping_status').insert(payloads);
+      error = err;
+    }
     btn.disabled = false;
-    btn.innerHTML = '전체 등록';
+    btn.innerHTML = shipEditingId ? '수정 저장' : '전체 등록';
 
     if (error) {
-      msg.innerHTML = `<div class="alert alert-danger">등록 오류: ${error.message}</div>`;
+      msg.innerHTML = `<div class="alert alert-danger">${shipEditingId ? '수정' : '등록'} 오류: ${error.message}</div>`;
       return;
     }
-    msg.innerHTML = `<div class="alert alert-success">✓ ${payloads.length}건의 발송 정보가 등록되었습니다.</div>`;
+    msg.innerHTML = `<div class="alert alert-success">✓ ${shipEditingId ? '1건 수정' : payloads.length + '건 등록'} 완료.</div>`;
+    if (shipEditingId) { shipExitEditMode(); btn.textContent = '전체 등록'; }
     shipRows.innerHTML = '';
     addShipRow();
     loadOverseasPicks(); // 등록된 행은 ✓등록됨으로 갱신
@@ -838,16 +848,25 @@
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span>등록 중...';
 
-      const { error } = await supabaseClient.from('shipping_status').insert(payloads);
+      let error;
+      if (shipEditingId && shipEditScope === 'domestic' && payloads.length === 1) {
+        const { error: err } = await supabaseClient
+          .from('shipping_status').update(payloads[0]).eq('id', shipEditingId);
+        error = err;
+      } else {
+        const { error: err } = await supabaseClient.from('shipping_status').insert(payloads);
+        error = err;
+      }
       btn.disabled = false;
-      btn.innerHTML = _t('ship.submit_all');
+      btn.innerHTML = shipEditingId ? '수정 저장' : _t('ship.submit_all');
 
       if (error) {
-        msg.innerHTML = `<div class="alert alert-danger">등록 오류: ${error.message}
+        msg.innerHTML = `<div class="alert alert-danger">${shipEditingId ? '수정' : '등록'} 오류: ${error.message}
           <br><small>※ shipping_status 테이블에 division/team/driver_contact 컬럼이 있는지 확인하세요.</small></div>`;
         return;
       }
-      msg.innerHTML = `<div class="alert alert-success">✓ ${payloads.length}건의 국내 발송 정보가 등록되었습니다.</div>`;
+      msg.innerHTML = `<div class="alert alert-success">✓ ${shipEditingId ? '1건 수정' : payloads.length + '건 국내 발송 등록'} 완료.</div>`;
+      if (shipEditingId) { shipExitEditMode(); btn.textContent = _t('ship.submit_all'); }
       domShipRows.innerHTML = '';
       addDomShipRow();
       loadDomesticPicks();
@@ -991,6 +1010,154 @@
   const domRefresh = document.getElementById('domestic-refresh');
   if (domSearch)  domSearch.addEventListener('input', renderDomesticPicks);
   if (domRefresh) domRefresh.addEventListener('click', loadDomesticPicks);
+
+  /* ==========================================================
+     발송 등록 수정 모드 (본인 이전 등록 조회 후 불러오기)
+     - 한 번에 한 건만 수정 (반복 그룹 특성상)
+  ========================================================== */
+  let shipEditingId = null;   // 수정 중인 shipping_status.id
+  let shipEditScope = null;   // 'overseas' or 'domestic'
+  const shipEditBannerEl = document.getElementById('ship-edit-mode-banner');
+
+  function shipExitEditMode() {
+    shipEditingId = null;
+    shipEditScope = null;
+    if (shipEditBannerEl) shipEditBannerEl.innerHTML = '';
+    const s = document.getElementById('ship-submit');
+    const d = document.getElementById('dom-ship-submit');
+    if (s) s.textContent = _t('ship.submit_all');
+    if (d) d.textContent = _t('ship.submit_all');
+  }
+
+  function shipEnterEditModeOverseas(row) {
+    shipEditingId = row.id;
+    shipEditScope = 'overseas';
+    // 해외 스코프로 전환
+    const overseasBtn = document.querySelector('.scope-btn[data-scope="overseas"][data-target="ship"]');
+    if (overseasBtn && !overseasBtn.classList.contains('active')) overseasBtn.click();
+    // 기존 행 다 지우고 한 건만
+    shipRows.innerHTML = '';
+    addShipRow();
+    const rowEl = shipRows.lastElementChild;
+    if (row.company)     rowEl.querySelector('.s-company').value = row.company;
+    if (row.country) {
+      const cSel = rowEl.querySelector('.s-country');
+      // 옵션이 없으면 커스텀으로
+      const opt = [...cSel.options].find(o => o.value === row.country);
+      if (opt) { cSel.value = row.country; cSel.dispatchEvent(new Event('change')); }
+      else {
+        cSel.value = '__custom__';
+        cSel.dispatchEvent(new Event('change'));
+        rowEl.querySelector('.s-country-custom').value = row.country;
+      }
+    }
+    if (row.region) {
+      const rSel = rowEl.querySelector('.s-region');
+      const opt = [...rSel.options].find(o => o.value === row.region);
+      if (opt) rSel.value = row.region;
+      else {
+        rSel.value = '__custom__';
+        rSel.dispatchEvent(new Event('change'));
+        rowEl.querySelector('.s-region-custom').value = row.region;
+      }
+    }
+    if (row.status_date) rowEl.querySelector('.s-etd').value = row.status_date;
+    if (row.eta)         rowEl.querySelector('.s-eta').value = row.eta;
+    if (row.tracking_no) rowEl.querySelector('.s-bl').value = row.tracking_no;
+    if (row.courier)     rowEl.querySelector('.s-vessel').value = row.courier;
+    if (row.note)        rowEl.querySelector('.s-note').value = row.note;
+    // 등록자 정보 채우기
+    if (row.submitter_name)  document.getElementById('submitter_name').value  = row.submitter_name;
+    if (row.submitter_email) document.getElementById('submitter_email').value = row.submitter_email;
+    if (row.submitter_office)document.getElementById('submitter_office').value= row.submitter_office;
+
+    shipEditBannerEl.innerHTML = `
+      <div class="edit-mode-banner">
+        <span>✏️</span>
+        <span class="msg"><b>수정 모드</b> — 이전 해외 발송 등록을 불러왔습니다. 수정 후 등록하면 <b>기존 등록이 덮어쓰기</b>됩니다.</span>
+        <button type="button" class="btn btn-secondary btn-sm" id="ship-exit-edit">취소</button>
+      </div>`;
+    document.getElementById('ship-exit-edit').addEventListener('click', shipExitEditMode);
+    const btn = document.getElementById('ship-submit');
+    if (btn) btn.textContent = '수정 저장';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function shipEnterEditModeDomestic(row) {
+    shipEditingId = row.id;
+    shipEditScope = 'domestic';
+    // 국내 스코프로 전환
+    const domBtn = document.querySelector('.scope-btn[data-scope="domestic"][data-target="ship"]');
+    if (domBtn && !domBtn.classList.contains('active')) domBtn.click();
+    // 기존 행 다 지우고 한 건만
+    domShipRows.innerHTML = '';
+    addDomShipRow();
+    const rowEl = domShipRows.lastElementChild;
+    if (row.company) { rowEl.querySelector('.d-company').value = row.company; rowEl.querySelector('.d-company').dispatchEvent(new Event('change')); }
+    if (row.division){ rowEl.querySelector('.d-division').value = row.division; rowEl.querySelector('.d-division').dispatchEvent(new Event('change')); }
+    if (row.team)    { setTimeout(() => { rowEl.querySelector('.d-team').value = row.team; }, 0); }
+    if (row.eta)     rowEl.querySelector('.d-eta').value = row.eta;
+    if (row.qty != null) rowEl.querySelector('.d-qty').value = row.qty;
+    if (row.driver_contact) rowEl.querySelector('.d-driver').value = row.driver_contact;
+    if (row.note)    rowEl.querySelector('.d-note').value = row.note;
+
+    if (row.submitter_name)  document.getElementById('submitter_name').value  = row.submitter_name;
+    if (row.submitter_email) document.getElementById('submitter_email').value = row.submitter_email;
+    if (row.submitter_office)document.getElementById('submitter_office').value= row.submitter_office;
+
+    shipEditBannerEl.innerHTML = `
+      <div class="edit-mode-banner">
+        <span>✏️</span>
+        <span class="msg"><b>수정 모드</b> — 이전 국내 발송 등록을 불러왔습니다. 수정 후 등록하면 <b>기존 등록이 덮어쓰기</b>됩니다.</span>
+        <button type="button" class="btn btn-secondary btn-sm" id="ship-exit-edit">취소</button>
+      </div>`;
+    document.getElementById('ship-exit-edit').addEventListener('click', shipExitEditMode);
+    const btn = document.getElementById('dom-ship-submit');
+    if (btn) btn.textContent = '수정 저장';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // 해외 등록 조회 버튼
+  const shipMyEntriesBtn = document.getElementById('ship-my-entries-btn');
+  if (shipMyEntriesBtn) shipMyEntriesBtn.addEventListener('click', () => {
+    if (!window.MyEntries) return;
+    MyEntries.open({
+      table: 'shipping_status',
+      filter: null,   // 클라이언트에서 division IS NULL 필터
+      defaultEmail: document.getElementById('submitter_email').value.trim(),
+      renderRow: (r) => {
+        if (r.division) return '';  // 국내 건 제외 → 빈 문자열 (rerender 시 hide)
+        return `<b>${r.company || ''} · ${r.country || ''} ${r.region || ''}</b><br>
+          ETD ${r.status_date || '-'} · ETA ${r.eta || '-'} · BL ${r.tracking_no || '-'}
+          <small>&nbsp; | ${(r.created_at || '').substring(0, 10)}</small>`;
+      },
+      onSelect: (row) => {
+        if (row.division) { alert('선택한 항목은 국내 발송입니다.'); return; }
+        shipEnterEditModeOverseas(row);
+      }
+    });
+  });
+
+  // 국내 등록 조회 버튼
+  const domShipMyEntriesBtn = document.getElementById('dom-ship-my-entries-btn');
+  if (domShipMyEntriesBtn) domShipMyEntriesBtn.addEventListener('click', () => {
+    if (!window.MyEntries) return;
+    MyEntries.open({
+      table: 'shipping_status',
+      filter: null,
+      defaultEmail: document.getElementById('submitter_email').value.trim(),
+      renderRow: (r) => {
+        if (!r.division) return '';   // 해외 건 제외
+        return `<b>${r.company || ''} · ${r.division || ''} ${r.team || ''}</b><br>
+          도착예정일 ${r.eta || '-'} · 부수 ${(r.qty || 0).toLocaleString()} · 기사 ${r.driver_contact || '-'}
+          <small>&nbsp; | ${(r.created_at || '').substring(0, 10)}</small>`;
+      },
+      onSelect: (row) => {
+        if (!row.division) { alert('선택한 항목은 해외 발송입니다.'); return; }
+        shipEnterEditModeDomestic(row);
+      }
+    });
+  });
 
   /* ==========================================================
      발송 등록 임시저장 (localStorage)

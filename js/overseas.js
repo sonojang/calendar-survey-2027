@@ -284,6 +284,68 @@
   });
 
   /* ==========================================================
+     ① 탭 수정 모드 (본인 응답 조회 후 불러오기)
+  ========================================================== */
+  let ovrEditingId = null;
+  const ovrEditBannerEl = document.getElementById('qty-edit-mode-banner');
+
+  function ovrEnterEditMode(row) {
+    ovrEditingId = row.id;
+    // 폼에 값 채우기
+    if (row.company) { qtyCompanySel.value = row.company; qtyCompanySel.dispatchEvent(new Event('change')); }
+    if (row.country) {
+      qtyCountrySel.value = row.country;
+      qtyCountrySel.dispatchEvent(new Event('change'));
+      if (row.region) {
+        qtyRegionSel.value = row.region;
+        qtyRegionSel.dispatchEvent(new Event('change'));
+      }
+    }
+    document.getElementById('qty-jangkum').value = row.jangkum_qty || 0;
+    document.getElementById('qty-heunga').value  = row.heunga_qty  || 0;
+    document.getElementById('qty-yjc-jangkum').value = row.yjc_jangkum_qty || 0;
+    document.getElementById('qty-yjc-heunga').value  = row.yjc_heunga_qty  || 0;
+    if (row.shipping_method) qtyShipping.value = row.shipping_method;
+    document.getElementById('qty-address').value = row.shipping_address || '';
+    document.getElementById('qty-port-code').value = row.port_code || '';
+    document.getElementById('qty-pic-name').value = row.pic_name || '';
+    document.getElementById('qty-pic-contact').value = row.pic_contact || '';
+    document.getElementById('qty-note').value = row.note || '';
+
+    ovrEditBannerEl.innerHTML = `
+      <div class="edit-mode-banner">
+        <span>✏️</span>
+        <span class="msg"><b>수정 모드</b> — 기존 응답을 불러왔습니다. 수정 후 제출하면 <b>기존 응답이 덮어쓰기</b>됩니다.</span>
+        <button type="button" class="btn btn-secondary btn-sm" id="qty-exit-edit-mode">취소</button>
+      </div>`;
+    document.getElementById('qty-exit-edit-mode').addEventListener('click', () => {
+      ovrEditingId = null;
+      ovrEditBannerEl.innerHTML = '';
+      document.getElementById('qty-form').reset();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    const submitBtn = document.getElementById('qty-submit');
+    if (submitBtn) submitBtn.textContent = '수정 저장';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  document.getElementById('qty-my-entries-btn').addEventListener('click', () => {
+    if (!window.MyEntries) return;
+    MyEntries.open({
+      table: 'overseas_quantities',
+      filter: null,
+      defaultEmail: document.getElementById('submitter_email').value.trim(),
+      renderRow: (r) => `
+        <b>${r.company || ''} · ${r.country || ''} ${r.region || ''}</b>
+        <span class="cal-type-badge cal-type-${r.calendar_type}">${r.calendar_type}</span><br>
+        장금 ${(r.jangkum_qty||0).toLocaleString()} · 흥아 ${(r.heunga_qty||0).toLocaleString()}
+        <small>&nbsp; | ${r.survey_year || ''}년 · ${(r.created_at || '').substring(0, 10)}</small>
+      `,
+      onSelect: ovrEnterEditMode
+    });
+  });
+
+  /* ==========================================================
      ① 탭 임시저장 (localStorage)
   ========================================================== */
   const OVR_DRAFT_KEY = 'overseas_qty';
@@ -484,19 +546,35 @@
       ...submitter
     };
 
-    const { error } = await supabaseClient.from('overseas_quantities').insert([payload]);
+    let error;
+    if (ovrEditingId) {
+      const { error: err } = await supabaseClient
+        .from('overseas_quantities')
+        .update(payload)
+        .eq('id', ovrEditingId);
+      error = err;
+    } else {
+      const { error: err } = await supabaseClient
+        .from('overseas_quantities')
+        .insert([payload]);
+      error = err;
+    }
+
     btn.disabled = false;
-    btn.innerHTML = '제출하기';
+    btn.innerHTML = ovrEditingId ? '수정 저장' : '제출하기';
 
     if (error) {
-      msg.innerHTML = `<div class="alert alert-danger">제출 오류: ${error.message}</div>`;
+      msg.innerHTML = `<div class="alert alert-danger">${ovrEditingId ? '수정' : '제출'} 오류: ${error.message}</div>`;
       return;
     }
     msg.innerHTML = `<div class="alert alert-success">
-      ✓ ${company} - ${country} ${region} 제출 완료.<br>
+      ✓ ${company} - ${country} ${region} ${ovrEditingId ? '수정' : '제출'} 완료.<br>
       <small>다른 회사 달력도 신청하려면 회사를 바꿔서 다시 제출해 주세요.</small>
     </div>`;
     if (window.Draft) { Draft.clear(OVR_DRAFT_KEY); if (ovrDraftBanner) ovrDraftBanner.rerender(); }
+    ovrEditingId = null;
+    ovrEditBannerEl.innerHTML = '';
+    btn.textContent = '제출하기';
     document.getElementById('qty-form').reset();
     qtyRegionSel.disabled = true;
     qtyRegionSel.innerHTML = '<option value="">먼저 국가를 선택하세요</option>';

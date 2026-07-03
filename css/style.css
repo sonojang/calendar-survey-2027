@@ -476,6 +476,45 @@ tr:hover td { background: #fafbfc; }
 .summary-card .card-diff.up   { color: #1b8a3a; background: #e6f4ea; }
 .summary-card .card-diff.neutral { color: #666; background: #f0f3f7; }
 
+/* ---------- 내 응답 조회·수정 모달 ---------- */
+.btn-my-entries {
+  background: #e8f5e9;
+  color: #1b5e20;
+  border: 1px solid #a5d6a7;
+}
+.btn-my-entries:hover { background: #c8e6c9; }
+
+.my-entry-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 6px;
+  background: #fafbfc;
+}
+.my-entry-summary { flex: 1; font-size: 13px; color: #333; }
+.my-entry-summary b { color: var(--primary); }
+.my-entry-summary small { color: var(--text-muted); }
+.my-entry-item .btn-sm { margin: 0; white-space: nowrap; }
+
+/* 수정 모드 표시 배너 */
+.edit-mode-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-left: 4px solid #1976d2;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.edit-mode-banner .msg { flex: 1; font-size: 13px; color: #0d47a1; }
+.edit-mode-banner .msg b { color: #003876; }
+
 /* ---------- 임시저장 배너 ---------- */
 .draft-banner {
   display: flex;

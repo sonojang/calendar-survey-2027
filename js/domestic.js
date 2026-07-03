@@ -10,6 +10,53 @@
   const msg        = document.getElementById('msg-area');
   const submitBtn  = document.getElementById('submit-btn');
 
+  /* --- 수정 모드 (본인 응답 조회 후 불러오기) --- */
+  let editingId = null;
+  const editModeBannerEl = document.getElementById('edit-mode-banner');
+
+  function enterEditMode(row) {
+    editingId = row.id;
+    // 폼에 값 채우기
+    if (row.company) { companySel.value = row.company; repopulateDivision(); }
+    if (row.division) { divSel.value = row.division; repopulateTeam(); }
+    if (row.team) { teamSel.value = row.team; }
+    document.getElementById('jangkum_b_qty').value = row.jangkum_b_qty || 0;
+    document.getElementById('heunga_b_qty').value  = row.heunga_b_qty  || 0;
+    document.getElementById('submitter_name').value  = row.submitter_name  || '';
+    document.getElementById('submitter_email').value = row.submitter_email || '';
+    document.getElementById('note').value = row.note || '';
+
+    editModeBannerEl.innerHTML = `
+      <div class="edit-mode-banner">
+        <span>✏️</span>
+        <span class="msg"><b>수정 모드</b> — 기존 응답을 불러왔습니다. 수정 후 제출하면 <b>기존 응답이 덮어쓰기</b>됩니다.</span>
+        <button type="button" class="btn btn-secondary btn-sm" id="exit-edit-mode">취소</button>
+      </div>`;
+    document.getElementById('exit-edit-mode').addEventListener('click', () => {
+      editingId = null;
+      editModeBannerEl.innerHTML = '';
+      form.reset();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    submitBtn.textContent = '수정 저장';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  document.getElementById('my-entries-btn').addEventListener('click', () => {
+    if (!window.MyEntries) return;
+    MyEntries.open({
+      table: 'domestic_quantities',
+      filter: null,
+      defaultEmail: document.getElementById('submitter_email').value.trim(),
+      renderRow: (r) => `
+        <b>${r.company || ''} · ${r.division || ''} · ${r.team || ''}</b><br>
+        장금B ${(r.jangkum_b_qty||0).toLocaleString()} · 흥아B ${(r.heunga_b_qty||0).toLocaleString()}
+        <small>&nbsp; | ${r.survey_year || ''}년 · ${(r.created_at || '').substring(0, 10)}</small>
+      `,
+      onSelect: enterEditMode
+    });
+  });
+
   /* --- 임시저장 --- */
   const DRAFT_KEY = 'domestic';
   const draftBannerEl = document.getElementById('draft-banner');
@@ -120,26 +167,41 @@
       note:            document.getElementById('note').value.trim() || null
     };
 
-    const { error } = await supabaseClient
-      .from('domestic_quantities')
-      .insert([payload]);
+    let error;
+    if (editingId) {
+      // 수정 모드 → UPDATE
+      const { error: err } = await supabaseClient
+        .from('domestic_quantities')
+        .update(payload)
+        .eq('id', editingId);
+      error = err;
+    } else {
+      // 신규 → INSERT
+      const { error: err } = await supabaseClient
+        .from('domestic_quantities')
+        .insert([payload]);
+      error = err;
+    }
 
     submitBtn.disabled = false;
-    submitBtn.innerHTML = '제출하기';
+    submitBtn.innerHTML = editingId ? '수정 저장' : '제출하기';
 
     if (error) {
       console.error(error);
       msg.innerHTML = `<div class="alert alert-danger">
-        제출 중 오류가 발생했습니다: ${error.message}
+        ${editingId ? '수정' : '제출'} 중 오류가 발생했습니다: ${error.message}
       </div>`;
       return;
     }
 
     msg.innerHTML = `<div class="alert alert-success">
-      ✓ 제출이 완료되었습니다. 감사합니다.<br>
+      ✓ ${editingId ? '수정이' : '제출이'} 완료되었습니다. 감사합니다.<br>
       <small>추가 또는 수정이 필요하면 다시 제출하시면 됩니다 (최신 응답 기준).</small>
     </div>`;
     if (window.Draft) { Draft.clear(DRAFT_KEY); if (draftBanner) draftBanner.rerender(); }
+    editingId = null;
+    editModeBannerEl.innerHTML = '';
+    submitBtn.textContent = '제출하기';
     form.reset();
     divSel.disabled = true;
     divSel.innerHTML = '<option value="">먼저 회사를 선택하세요</option>';

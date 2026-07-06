@@ -217,12 +217,18 @@
         엑셀 양식을 다운로드 받아 작성 후 업로드하거나, 아래에서 직접 행 추가 가능합니다.
       </p>
 
-      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px">
-        <button type="button" class="btn btn-secondary btn-sm" id="detail-template" data-i18n="ovr.tpl_download">📥 엑셀 양식 다운로드</button>
-        <label class="btn btn-secondary btn-sm" style="cursor:pointer; display:inline-flex; align-items:center; margin:0">
-          <span data-i18n="ovr.tpl_upload">📤 작성한 엑셀 업로드</span>
-          <input type="file" id="detail-upload" accept=".xlsx,.xls" style="display:none">
-        </label>
+      <div id="detail-draft-banner"></div>
+      <div id="detail-edit-mode-banner"></div>
+
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; align-items:center; justify-content:space-between">
+        <div style="display:flex; gap:8px; flex-wrap:wrap">
+          <button type="button" class="btn btn-secondary btn-sm" id="detail-template" data-i18n="ovr.tpl_download">📥 엑셀 양식 다운로드</button>
+          <label class="btn btn-secondary btn-sm" style="cursor:pointer; display:inline-flex; align-items:center; margin:0">
+            <span data-i18n="ovr.tpl_upload">📤 작성한 엑셀 업로드</span>
+            <input type="file" id="detail-upload" accept=".xlsx,.xls" style="display:none">
+          </label>
+        </div>
+        <button type="button" class="btn btn-my-entries btn-sm" id="detail-my-entries-btn" data-i18n="common.my_entries_btn">📝 내 이전 신청 조회·수정</button>
       </div>
 
       <form id="detail-form">
@@ -237,7 +243,10 @@
         <button type="button" class="add-row-btn" id="detail-add" data-i18n="common.add_row">+ 행 추가</button>
 
         <div id="detail-msg"></div>
-        <button class="btn btn-primary btn-block" type="submit" id="detail-submit" style="margin-top:12px" data-i18n="common.submit_all">전체 제출</button>
+        <div class="submit-row">
+          <button class="btn btn-draft" type="button" id="detail-draft-save" data-i18n="common.draft_save">💾 임시저장</button>
+          <button class="btn btn-primary" type="submit" id="detail-submit" data-i18n="common.submit_all">전체 제출</button>
+        </div>
       </form>
     </div>
 
@@ -251,12 +260,18 @@
         엑셀 양식을 다운로드 받아 작성 후 업로드하거나, 아래에서 직접 행 추가 가능합니다.
       </p>
 
-      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px">
-        <button type="button" class="btn btn-secondary btn-sm" id="holiday-template" data-i18n="ovr.tpl_download">📥 엑셀 양식 다운로드</button>
-        <label class="btn btn-secondary btn-sm" style="cursor:pointer; display:inline-flex; align-items:center; margin:0">
-          <span data-i18n="ovr.tpl_upload">📤 작성한 엑셀 업로드</span>
-          <input type="file" id="holiday-upload" accept=".xlsx,.xls" style="display:none">
-        </label>
+      <div id="holiday-draft-banner"></div>
+      <div id="holiday-edit-mode-banner"></div>
+
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; align-items:center; justify-content:space-between">
+        <div style="display:flex; gap:8px; flex-wrap:wrap">
+          <button type="button" class="btn btn-secondary btn-sm" id="holiday-template" data-i18n="ovr.tpl_download">📥 엑셀 양식 다운로드</button>
+          <label class="btn btn-secondary btn-sm" style="cursor:pointer; display:inline-flex; align-items:center; margin:0">
+            <span data-i18n="ovr.tpl_upload">📤 작성한 엑셀 업로드</span>
+            <input type="file" id="holiday-upload" accept=".xlsx,.xls" style="display:none">
+          </label>
+        </div>
+        <button type="button" class="btn btn-my-entries btn-sm" id="holiday-my-entries-btn" data-i18n="common.my_entries_btn">📝 내 이전 신청 조회·수정</button>
       </div>
 
       <form id="holiday-form">
@@ -271,7 +286,10 @@
         <button type="button" class="add-row-btn" id="holiday-add" data-i18n="ovr.holiday_add">+ 공휴일 추가</button>
 
         <div id="holiday-msg"></div>
-        <button class="btn btn-primary btn-block" type="submit" id="holiday-submit" style="margin-top:12px" data-i18n="common.submit_all">전체 제출</button>
+        <div class="submit-row">
+          <button class="btn btn-draft" type="button" id="holiday-draft-save" data-i18n="common.draft_save">💾 임시저장</button>
+          <button class="btn btn-primary" type="submit" id="holiday-submit" data-i18n="common.submit_all">전체 제출</button>
+        </div>
       </form>
     </div>
 
@@ -312,12 +330,22 @@
         <img class="image-modal-content" src="assets/network-jangkum.jpg" alt="SINOKOR Networks (zoom)" id="network-image-modal-img">
       </div>
 
+      <div id="network-draft-banner"></div>
+      <div id="network-edit-mode-banner"></div>
+
+      <div style="display:flex; justify-content:flex-end; margin-bottom:8px">
+        <button type="button" class="btn btn-my-entries btn-sm" id="network-my-entries-btn" data-i18n="common.my_entries_btn">📝 내 이전 신청 조회·수정</button>
+      </div>
+
       <form id="network-form">
         <div id="network-rows"></div>
         <button type="button" class="add-row-btn" id="network-add" data-i18n="ovr.network_add">+ 변경 항목 추가</button>
 
         <div id="network-msg"></div>
-        <button class="btn btn-primary btn-block" type="submit" id="network-submit" style="margin-top:12px" data-i18n="common.submit_all">전체 제출</button>
+        <div class="submit-row">
+          <button class="btn btn-draft" type="button" id="network-draft-save" data-i18n="common.draft_save">💾 임시저장</button>
+          <button class="btn btn-primary" type="submit" id="network-submit" data-i18n="common.submit_all">전체 제출</button>
+        </div>
       </form>
     </div>
 

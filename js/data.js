@@ -75,6 +75,20 @@ const DOMESTIC_ORG = {
     { division: '지방사무소',   team: '평택사무소'    },
     { division: '지방사무소',   team: '울산사무소'    },
     { division: '지방사무소',   team: '광양사무소'    }
+  ],
+
+  'YJC KOREA': [
+    { division: '서울사무소', team: '관리팀' },
+    { division: '서울사무소', team: '영업팀' },
+    { division: '부산사무소', team: '관리팀' },
+    { division: '부산사무소', team: '영업팀' }
+  ],
+
+  '시노코쉽매니지먼트': [
+    { division: '서울사무소', team: '관리팀' },
+    { division: '서울사무소', team: '영업팀' },
+    { division: '부산사무소', team: '관리팀' },
+    { division: '부산사무소', team: '영업팀' }
   ]
 
 };
@@ -175,14 +189,17 @@ const NETWORK_FIELDS = [
 // ============================================================
 const I18N_LOOKUP = {
   company: {
-    '장금상선': 'Sinokor',
-    '흥아라인': 'Heung-A Line',
-    'YJC':      'YJC'
+    '장금상선':          'Sinokor',
+    '흥아라인':          'Heung-A Line',
+    'YJC':               'YJC',
+    'YJC KOREA':         'YJC KOREA',
+    '시노코쉽매니지먼트':'Sinokor Ship Management'
   },
   division: {
     '영업본부':     'Sales Division',
     '운영본부':     'Operations Division',
     '경영관리본부': 'Management Division',
+    '서울사무소':   'Seoul Office',
     '부산사무소':   'Busan Office',
     '지방사무소':   'Regional Office'
   },

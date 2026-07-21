@@ -1,8 +1,281 @@
-// 전체 조회 페이지 - 인증 없이 응답 데이터 조회, 엑셀/CSV 다운로드
-// (2026-07-01) 관리자 로그인 제거 — 사내 URL 공유 기반, 누구나 조회·다운로드 가능
+// 전체 조회 페이지 - 조회는 무인증, 수정·삭제는 로그인 후만
+// (2026-07-02) 관리자 로그인 재도입 — 삭제·수정 액션에만 인증 필요
 
 (function () {
   const _t = (k) => (window.i18n ? window.i18n.t(k) : k);
+
+  // 로그인 상태 (Supabase 세션 유무)
+  let isAdmin = false;
+
+  /* ----------------------------------------------------------
+     테이블별 편집 가능한 필드 정의
+     type: text / number / textarea / select
+  ---------------------------------------------------------- */
+  const EDIT_FIELDS = {
+    domestic_quantities: [
+      { key: 'survey_year',    label: '조사년도',   type: 'number' },
+      { key: 'company',        label: '회사',       type: 'select', options: ['', '장금상선', '흥아라인'] },
+      { key: 'division',       label: '본부',       type: 'text' },
+      { key: 'team',           label: '팀',         type: 'text' },
+      { key: 'jangkum_b_qty',  label: '장금B 수량', type: 'number' },
+      { key: 'heunga_b_qty',   label: '흥아B 수량', type: 'number' },
+      { key: 'submitter_name', label: '입력자',     type: 'text' },
+      { key: 'submitter_email',label: '이메일',     type: 'text' },
+      { key: 'note',           label: '비고',       type: 'textarea' }
+    ],
+    overseas_quantities: [
+      { key: 'survey_year',      label: '조사년도',   type: 'number' },
+      { key: 'company',          label: '신청회사',   type: 'select', options: ['', '장금상선', '흥아라인', 'YJC'] },
+      { key: 'country',          label: '국가',       type: 'text' },
+      { key: 'region',           label: '지역',       type: 'text' },
+      { key: 'calendar_type',    label: '타입 (A/B)', type: 'select', options: ['A', 'B'] },
+      { key: 'jangkum_qty',      label: '장금 수량',  type: 'number' },
+      { key: 'heunga_qty',       label: '흥아 수량',  type: 'number' },
+      { key: 'yjc_jangkum_qty',  label: 'YJC 장금',   type: 'number' },
+      { key: 'yjc_heunga_qty',   label: 'YJC 흥아',   type: 'number' },
+      { key: 'shipping_method',  label: '배송방법',   type: 'text' },
+      { key: 'port_code',        label: 'Port Code',  type: 'text' },
+      { key: 'pic_name',         label: '담당자',     type: 'text' },
+      { key: 'pic_contact',      label: '연락처',     type: 'text' },
+      { key: 'shipping_address', label: '주소',       type: 'textarea' },
+      { key: 'note',             label: '비고',       type: 'textarea' },
+      { key: 'submitter_name',   label: '입력자',     type: 'text' },
+      { key: 'submitter_email',  label: '이메일',     type: 'text' }
+    ],
+    detail_ports: [
+      { key: 'country',       label: '국가',   type: 'text' },
+      { key: 'region',        label: '지역',   type: 'text' },
+      { key: 'port_code',     label: 'Port Code', type: 'text' },
+      { key: 'quantity',      label: '수량',   type: 'number' },
+      { key: 'company_name',  label: '사명',   type: 'text' },
+      { key: 'address',       label: '주소',   type: 'textarea' },
+      { key: 'submitter_name', label: '입력자', type: 'text' },
+      { key: 'submitter_email',label: '이메일', type: 'text' }
+    ],
+    overseas_holidays: [
+      { key: 'country',         label: '국가',       type: 'text' },
+      { key: 'holiday_date',    label: '날짜',       type: 'text' },
+      { key: 'weekday',         label: '요일',       type: 'text' },
+      { key: 'holiday_name_en', label: '공휴일명 (EN)', type: 'text' },
+      { key: 'submitter_name',  label: '입력자',     type: 'text' },
+      { key: 'submitter_email', label: '이메일',     type: 'text' }
+    ],
+    network_changes: [
+      { key: 'company',     label: '네트워크 회사', type: 'select', options: ['', '장금상선', '흥아라인'] },
+      { key: 'country',     label: '국가',   type: 'text' },
+      { key: 'branch_name', label: '지점/사무소', type: 'text' },
+      { key: 'field',       label: '변경항목', type: 'text' },
+      { key: 'old_value',   label: '기존값',   type: 'textarea' },
+      { key: 'new_value',   label: '변경값',   type: 'textarea' },
+      { key: 'full_note',   label: '전체 메모', type: 'textarea' },
+      { key: 'submitter_name', label: '입력자', type: 'text' },
+      { key: 'submitter_email',label: '이메일', type: 'text' }
+    ],
+    shipping_status: [
+      { key: 'company',     label: '회사',    type: 'text' },
+      { key: 'country',     label: '국가',    type: 'text' },
+      { key: 'region',      label: '지역',    type: 'text' },
+      { key: 'division',    label: '본부(국내)', type: 'text' },
+      { key: 'team',        label: '팀(국내)',   type: 'text' },
+      { key: 'status_date', label: 'ETD',    type: 'text' },
+      { key: 'eta',         label: 'ETA',    type: 'text' },
+      { key: 'qty',         label: '부수',    type: 'number' },
+      { key: 'tracking_no', label: 'BL 번호', type: 'text' },
+      { key: 'courier',     label: '선박명/배송사', type: 'text' },
+      { key: 'driver_contact', label: '기사 연락처', type: 'text' },
+      { key: 'note',        label: '특이사항', type: 'textarea' }
+    ]
+  };
+
+  /* ----------------------------------------------------------
+     인증 - 로그인 / 로그아웃 / 세션 체크
+  ---------------------------------------------------------- */
+  const loginBtn    = document.getElementById('admin-login-btn');
+  const logoutBtn   = document.getElementById('admin-logout-btn');
+  const userLabel   = document.getElementById('admin-user');
+  const loginModal  = document.getElementById('login-modal');
+  const loginEmail  = document.getElementById('login-email');
+  const loginPw     = document.getElementById('login-password');
+  const loginMsg    = document.getElementById('login-msg');
+
+  function openLoginModal() {
+    loginMsg.innerHTML = '';
+    loginPw.value = '';
+    loginModal.style.display = 'flex';
+    setTimeout(() => loginPw.focus(), 50);
+  }
+  function closeLoginModal() {
+    loginModal.style.display = 'none';
+  }
+  function setAdminUI(email) {
+    isAdmin = !!email;
+    if (email) {
+      loginBtn.style.display = 'none';
+      logoutBtn.style.display = 'inline';
+      userLabel.style.display = 'inline';
+      userLabel.textContent = '👤 ' + email;
+    } else {
+      loginBtn.style.display = 'inline';
+      logoutBtn.style.display = 'none';
+      userLabel.style.display = 'none';
+      userLabel.textContent = '';
+    }
+    // 로그인 상태 변경 시 테이블 다시 그려서 액션 버튼 표시/숨김
+    if (typeof renderDomestic === 'function') {
+      renderDomestic(); renderOverseas(); renderDetail();
+      renderHoliday();  renderNetwork(); renderShipping();
+    }
+  }
+
+  loginBtn.addEventListener('click', (e) => { e.preventDefault(); openLoginModal(); });
+  document.getElementById('login-cancel').addEventListener('click', closeLoginModal);
+  loginModal.querySelector('.edit-modal-close').addEventListener('click', closeLoginModal);
+  loginModal.addEventListener('click', e => { if (e.target === loginModal) closeLoginModal(); });
+
+  document.getElementById('login-submit').addEventListener('click', async () => {
+    loginMsg.innerHTML = '';
+    const email = loginEmail.value.trim();
+    const password = loginPw.value;
+    if (!email || !password) {
+      loginMsg.innerHTML = `<div class="alert alert-danger">이메일과 비밀번호를 입력하세요.</div>`;
+      return;
+    }
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) {
+      loginMsg.innerHTML = `<div class="alert alert-danger">로그인 실패: ${error.message}</div>`;
+      return;
+    }
+    closeLoginModal();
+    setAdminUI(data.user.email);
+  });
+
+  logoutBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    await supabaseClient.auth.signOut();
+    setAdminUI(null);
+  });
+
+  // 페이지 로드 시 이미 로그인된 세션이 있으면 관리자 UI 활성화
+  supabaseClient.auth.getSession().then(({ data }) => {
+    if (data.session) setAdminUI(data.session.user.email);
+  });
+
+  /* ----------------------------------------------------------
+     편집 · 삭제 - 액션 버튼 렌더 + 편집 모달
+  ---------------------------------------------------------- */
+  const editModal   = document.getElementById('edit-modal');
+  const editTitle   = document.getElementById('edit-modal-title');
+  const editFields  = document.getElementById('edit-modal-fields');
+  const editSaveBtn = document.getElementById('edit-save');
+  let editContext   = null; // { table, id }
+
+  // 각 행에 붙는 액션 셀 HTML — 로그인 안 됐으면 빈 문자열 반환
+  function actionCell(table, id) {
+    if (!isAdmin) return '';
+    return `<td class="row-actions">
+      <button class="row-btn" data-action="edit" data-table="${table}" data-id="${id}">✏️ 수정</button>
+      <button class="row-btn danger" data-action="delete" data-table="${table}" data-id="${id}">🗑️ 삭제</button>
+    </td>`;
+  }
+  // 액션 컬럼 헤더 — 로그인 시에만 표시
+  function actionHeader() {
+    return isAdmin ? `<th class="col-actions">${_t('adm.col.action')}</th>` : '';
+  }
+
+  function openEditModal(table, row) {
+    editContext = { table, id: row.id };
+    editTitle.textContent = `수정 — ${table} #${row.id}`;
+    const fields = EDIT_FIELDS[table] || [];
+    editFields.innerHTML = fields.map(f => {
+      const val = row[f.key];
+      const safe = val === null || val === undefined ? '' : String(val);
+      if (f.type === 'textarea') {
+        return `<div class="form-group">
+          <label>${f.label}</label>
+          <textarea data-key="${f.key}" rows="3">${escAttr(safe)}</textarea>
+        </div>`;
+      }
+      if (f.type === 'select') {
+        const opts = (f.options || []).map(o =>
+          `<option value="${escAttr(o)}" ${o === safe ? 'selected' : ''}>${o || '(비어있음)'}</option>`).join('');
+        return `<div class="form-group">
+          <label>${f.label}</label>
+          <select data-key="${f.key}">${opts}</select>
+        </div>`;
+      }
+      return `<div class="form-group">
+        <label>${f.label}</label>
+        <input type="${f.type}" data-key="${f.key}" value="${escAttr(safe)}">
+      </div>`;
+    }).join('');
+    editModal.style.display = 'flex';
+  }
+  function closeEditModal() {
+    editModal.style.display = 'none';
+    editContext = null;
+  }
+  document.getElementById('edit-cancel').addEventListener('click', closeEditModal);
+  editModal.querySelector('.edit-modal-close').addEventListener('click', closeEditModal);
+  editModal.addEventListener('click', e => { if (e.target === editModal) closeEditModal(); });
+
+  editSaveBtn.addEventListener('click', async () => {
+    if (!editContext) return;
+    const { table, id } = editContext;
+    const payload = {};
+    editFields.querySelectorAll('[data-key]').forEach(el => {
+      const key = el.dataset.key;
+      let v = el.value;
+      if (el.type === 'number') v = v === '' ? null : Number(v);
+      if (v === '') v = null;
+      payload[key] = v;
+    });
+    editSaveBtn.disabled = true;
+    editSaveBtn.innerHTML = '<span class="spinner"></span>저장 중...';
+    const { error } = await supabaseClient.from(table).update(payload).eq('id', id);
+    editSaveBtn.disabled = false;
+    editSaveBtn.innerHTML = '저장';
+    if (error) {
+      alert('수정 실패: ' + error.message);
+      return;
+    }
+    closeEditModal();
+    await loadAll();
+  });
+
+  // 테이블 전역 클릭 위임 — 수정/삭제 버튼
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.row-btn');
+    if (!btn) return;
+    const { action, table, id } = btn.dataset;
+    if (!table || !id) return;
+    if (action === 'delete') {
+      if (!confirm('이 항목을 정말 삭제하시겠습니까?\n삭제 후에는 복구할 수 없습니다.')) return;
+      const { error } = await supabaseClient.from(table).delete().eq('id', Number(id));
+      if (error) { alert('삭제 실패: ' + error.message); return; }
+      await loadAll();
+    } else if (action === 'edit') {
+      // 해당 행의 원본 데이터 찾기
+      const key = tableToKey(table);
+      const row = (allData[key] || []).find(r => String(r.id) === String(id));
+      if (!row) { alert('해당 행을 찾지 못했습니다. 새로고침 후 다시 시도하세요.'); return; }
+      openEditModal(table, row);
+    }
+  });
+
+  function tableToKey(table) {
+    return {
+      domestic_quantities: 'domestic',
+      overseas_quantities: 'overseas',
+      detail_ports:        'detail',
+      overseas_holidays:   'holiday',
+      network_changes:     'network',
+      shipping_status:     'shipping'
+    }[table];
+  }
+
+  function escAttr(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+  }
 
   /* ----------------------------------------------------------
      탭 전환
@@ -40,13 +313,16 @@
   }
 
   async function loadAll() {
-    const [d1, d2, d3, d4, d5, d6] = await Promise.all([
+    const [d1, d2, d3, d4, d5, d6, v1, v2] = await Promise.all([
       supabaseClient.from('domestic_quantities').select('*').order('created_at', { ascending: false }),
       supabaseClient.from('overseas_quantities').select('*').order('created_at', { ascending: false }),
       supabaseClient.from('detail_ports'       ).select('*').order('created_at', { ascending: false }),
       supabaseClient.from('overseas_holidays'  ).select('*').order('created_at', { ascending: false }),
       supabaseClient.from('network_changes'    ).select('*').order('created_at', { ascending: false }),
-      supabaseClient.from('shipping_status'    ).select('*').order('created_at', { ascending: false })
+      supabaseClient.from('shipping_status'    ).select('*').order('created_at', { ascending: false }),
+      // 보고자료용 — 연도별 (division/team, country/region) 집계 view
+      supabaseClient.from('v_yearly_domestic').select('*'),
+      supabaseClient.from('v_yearly_overseas').select('*')
     ]);
     // 국내/해외 수량은 현재 조사년도(SURVEY_YEAR)만 표시. 이전 연도는 "과거 신청 수량" 모달용 히스토리로만 유지.
     // 같은 팀/지역이 여러 번 제출한 경우 최신 응답만 표시 (dedup은 화면 표시용 — DB 원본은 그대로).
@@ -62,6 +338,8 @@
     allData.holiday  = d4.data || [];
     allData.network  = d5.data || [];
     allData.shipping = d6.data || [];
+    allData.yearlyDomestic = v1.data || [];
+    allData.yearlyOverseas = v2.data || [];
 
     renderDomestic();
     renderOverseas();
@@ -69,6 +347,7 @@
     renderHoliday();
     renderNetwork();
     renderShipping();
+    renderReport();
     renderSummary();
   }
 
@@ -84,23 +363,26 @@
     // 회사별 국내 응답 건수
     const domByCo = {};
     allData.domestic.forEach(r => {
-      const k = r.company || '미지정';
+      const k = r.company || _t('adm.sum.unspecified');
       domByCo[k] = (domByCo[k] || 0) + 1;
     });
     const domBreakdown = Object.entries(domByCo).map(([k,v]) => `${k} ${v}`).join(' / ') || '0';
 
+    const rowsUnit   = _t('adm.sum.rows');
+    const copiesUnit = _t('adm.sum.copies');
+
     document.getElementById('stats-summary').innerHTML = `
       <div class="alert alert-info">
-        <b>응답 현황</b> &nbsp;|&nbsp;
-        국내 ${allData.domestic.length}건 (${domBreakdown}) — 장금B ${sumDomJ.toLocaleString()} · 흥아B ${sumDomH.toLocaleString()}
+        <b>${_t('adm.sum.title')}</b> &nbsp;|&nbsp;
+        ${_t('adm.sum.domestic')} ${allData.domestic.length}${rowsUnit} (${domBreakdown}) — ${_t('adm.col.jangkum_b')} ${sumDomJ.toLocaleString()} · ${_t('adm.col.heunga_b')} ${sumDomH.toLocaleString()}
         &nbsp;|&nbsp;
-        해외 ${allData.overseas.length}건 (장금 ${sumOvJ.toLocaleString()} · 흥아 ${sumOvH.toLocaleString()})
+        ${_t('adm.sum.overseas')} ${allData.overseas.length}${rowsUnit} (${_t('adm.col.jangkum')} ${sumOvJ.toLocaleString()} · ${_t('adm.col.heunga')} ${sumOvH.toLocaleString()})
         &nbsp;|&nbsp;
-        세부포트 ${allData.detail.length}건 (${sumDetail.toLocaleString()}부)
+        ${_t('adm.sum.detail')} ${allData.detail.length}${rowsUnit} (${sumDetail.toLocaleString()}${copiesUnit})
         &nbsp;|&nbsp;
-        공휴일 ${allData.holiday.length}건
+        ${_t('adm.sum.holiday')} ${allData.holiday.length}${rowsUnit}
         &nbsp;|&nbsp;
-        네트워크 변경 ${allData.network.length}건
+        ${_t('adm.sum.network')} ${allData.network.length}${rowsUnit}
       </div>`;
   }
 
@@ -108,15 +390,18 @@
 
   function renderDomestic() {
     const t = document.getElementById('table-domestic');
+    const cols = 9 + (isAdmin ? 1 : 0);
     t.innerHTML = `
       <thead><tr>
-        <th>회사</th><th>본부</th><th>팀</th>
-        <th class="num">장금B</th><th class="num">흥아B</th>
-        <th>입력자</th><th>이메일</th><th>비고</th><th>제출시각</th>
+        ${actionHeader()}
+        <th>${_t('adm.col.company')}</th><th>${_t('adm.col.division')}</th><th>${_t('adm.col.team')}</th>
+        <th class="num">${_t('adm.col.jangkum_b')}</th><th class="num">${_t('adm.col.heunga_b')}</th>
+        <th>${_t('adm.col.submitter')}</th><th>${_t('adm.col.email')}</th><th>${_t('adm.col.note')}</th><th>${_t('adm.col.submitted_at')}</th>
       </tr></thead>
       <tbody>
         ${allData.domestic.map(r => `
           <tr>
+            ${actionCell('domestic_quantities', r.id)}
             <td>${esc(r.company||'')}</td>
             <td>${esc(r.division)}</td>
             <td>${esc(r.team)}</td>
@@ -126,23 +411,26 @@
             <td>${esc(r.submitter_email||'')}</td>
             <td class="wrap">${esc(r.note||'')}</td>
             <td>${fmtDate(r.created_at)}</td>
-          </tr>`).join('') || emptyRow(9)}
+          </tr>`).join('') || emptyRow(cols)}
       </tbody>`;
   }
 
   function renderOverseas() {
     const t = document.getElementById('table-overseas');
+    const cols = 17 + (isAdmin ? 1 : 0);
     t.innerHTML = `
       <thead><tr>
-        <th>신청회사</th><th>국가</th><th>지역</th><th>타입</th>
-        <th class="num">장금</th><th class="num">흥아</th>
-        <th class="num">YJC장금</th><th class="num">YJC흥아</th>
-        <th>배송방법</th><th>Port</th><th>담당자</th><th>연락처</th>
-        <th>주소</th><th>비고</th><th>입력자</th><th>입력자 소속</th><th>제출시각</th>
+        ${actionHeader()}
+        <th>${_t('adm.col.company_req')}</th><th>${_t('adm.col.country')}</th><th>${_t('adm.col.region')}</th><th>${_t('adm.col.type')}</th>
+        <th class="num">${_t('adm.col.jangkum')}</th><th class="num">${_t('adm.col.heunga')}</th>
+        <th class="num">${_t('adm.col.yjc_jangkum')}</th><th class="num">${_t('adm.col.yjc_heunga')}</th>
+        <th>${_t('adm.col.ship_method')}</th><th>${_t('adm.col.port')}</th><th>${_t('adm.col.pic')}</th><th>${_t('adm.col.contact')}</th>
+        <th>${_t('adm.col.address')}</th><th>${_t('adm.col.note')}</th><th>${_t('adm.col.submitter')}</th><th>${_t('adm.col.submitter_office')}</th><th>${_t('adm.col.submitted_at')}</th>
       </tr></thead>
       <tbody>
         ${allData.overseas.map(r => `
           <tr>
+            ${actionCell('overseas_quantities', r.id)}
             <td>${esc(r.company||'')}</td>
             <td>${esc(r.country)}</td>
             <td>${esc(r.region)}</td>
@@ -155,49 +443,55 @@
             <td>${esc(r.port_code||'')}</td>
             <td class="wrap">${esc(r.pic_name||'')}</td>
             <td class="wrap">${esc(r.pic_contact||'')}</td>
-            <td class="wrap-wide">${esc(r.shipping_address||'').replace(/\n/g,'<br>')}</td>
+            <td class="wrap-address">${esc(r.shipping_address||'').replace(/\n/g,'<br>')}</td>
             <td class="wrap">${esc(r.note||'')}</td>
             <td>${esc(r.submitter_name||'')}</td>
             <td class="wrap">${esc(r.submitter_office||'')}</td>
             <td>${fmtDate(r.created_at)}</td>
-          </tr>`).join('') || emptyRow(17)}
+          </tr>`).join('') || emptyRow(cols)}
       </tbody>`;
   }
 
   function renderDetail() {
     const t = document.getElementById('table-detail');
+    const cols = 9 + (isAdmin ? 1 : 0);
     t.innerHTML = `
       <thead><tr>
-        <th>국가</th><th>지역</th><th>Port</th>
-        <th class="num">수량</th><th>배송처 사명</th><th>주소</th>
-        <th>입력자</th><th>입력자 소속</th><th>제출시각</th>
+        ${actionHeader()}
+        <th>${_t('adm.col.country')}</th><th>${_t('adm.col.region')}</th><th>${_t('adm.col.port')}</th>
+        <th class="num">${_t('adm.col.qty')}</th><th>${_t('adm.col.company_ship')}</th><th>${_t('adm.col.address')}</th>
+        <th>${_t('adm.col.submitter')}</th><th>${_t('adm.col.submitter_office')}</th><th>${_t('adm.col.submitted_at')}</th>
       </tr></thead>
       <tbody>
         ${allData.detail.map(r => `
           <tr>
+            ${actionCell('detail_ports', r.id)}
             <td>${esc(r.country)}</td>
             <td>${esc(r.region)}</td>
             <td>${esc(r.port_code||'')}</td>
             <td class="num">${(r.quantity||0).toLocaleString()}</td>
             <td class="wrap">${esc(r.company_name||'')}</td>
-            <td class="wrap-wide">${esc(r.address||'').replace(/\n/g,'<br>')}</td>
+            <td class="wrap-address">${esc(r.address||'').replace(/\n/g,'<br>')}</td>
             <td>${esc(r.submitter_name||'')}</td>
             <td class="wrap">${esc(r.submitter_office||'')}</td>
             <td>${fmtDate(r.created_at)}</td>
-          </tr>`).join('') || emptyRow(9)}
+          </tr>`).join('') || emptyRow(cols)}
       </tbody>`;
   }
 
   function renderHoliday() {
     const t = document.getElementById('table-holiday');
+    const cols = 7 + (isAdmin ? 1 : 0);
     t.innerHTML = `
       <thead><tr>
-        <th>국가</th><th>날짜</th><th>요일</th><th>공휴일명 (EN)</th>
-        <th>입력자</th><th>입력자 소속</th><th>제출시각</th>
+        ${actionHeader()}
+        <th>${_t('adm.col.country')}</th><th>${_t('adm.col.date')}</th><th>${_t('adm.col.weekday')}</th><th>${_t('adm.col.holiday_en')}</th>
+        <th>${_t('adm.col.submitter')}</th><th>${_t('adm.col.submitter_office')}</th><th>${_t('adm.col.submitted_at')}</th>
       </tr></thead>
       <tbody>
         ${allData.holiday.map(r => `
           <tr>
+            ${actionCell('overseas_holidays', r.id)}
             <td>${esc(r.country)}</td>
             <td>${esc(r.holiday_date)}</td>
             <td>${esc(r.weekday||'')}</td>
@@ -205,21 +499,24 @@
             <td>${esc(r.submitter_name||'')}</td>
             <td>${esc(r.submitter_office||'')}</td>
             <td>${fmtDate(r.created_at)}</td>
-          </tr>`).join('') || emptyRow(7)}
+          </tr>`).join('') || emptyRow(cols)}
       </tbody>`;
   }
 
   function renderNetwork() {
     const t = document.getElementById('table-network');
+    const cols = 9 + (isAdmin ? 1 : 0);
     t.innerHTML = `
       <thead><tr>
-        <th>국가</th><th>지점/사무소</th><th>변경항목</th>
-        <th>기존값</th><th>변경값</th><th>메모</th>
-        <th>입력자</th><th>입력자 소속</th><th>제출시각</th>
+        ${actionHeader()}
+        <th>${_t('adm.col.country')}</th><th>${_t('adm.col.branch')}</th><th>${_t('adm.col.change_field')}</th>
+        <th>${_t('adm.col.old_value')}</th><th>${_t('adm.col.new_value')}</th><th>${_t('adm.col.memo')}</th>
+        <th>${_t('adm.col.submitter')}</th><th>${_t('adm.col.submitter_office')}</th><th>${_t('adm.col.submitted_at')}</th>
       </tr></thead>
       <tbody>
         ${allData.network.map(r => `
           <tr>
+            ${actionCell('network_changes', r.id)}
             <td>${esc(r.country)}</td>
             <td>${esc(r.branch_name)}</td>
             <td>${esc(r.field||'')}</td>
@@ -229,27 +526,30 @@
             <td>${esc(r.submitter_name||'')}</td>
             <td class="wrap">${esc(r.submitter_office||'')}</td>
             <td>${fmtDate(r.created_at)}</td>
-          </tr>`).join('') || emptyRow(9)}
+          </tr>`).join('') || emptyRow(cols)}
       </tbody>`;
   }
 
   function renderShipping() {
     const t = document.getElementById('table-shipping');
     if (!t) return;
+    const cols = 12 + (isAdmin ? 1 : 0);
     t.innerHTML = `
       <thead><tr>
-        <th>회사</th><th>국가</th><th>지역</th>
-        <th>ETD</th><th>ETA</th>
-        <th>BL 번호</th><th>선박명</th>
-        <th>특이사항</th><th>수령상태</th><th>등록자</th><th>등록자 소속</th><th>등록시각</th>
+        ${actionHeader()}
+        <th>${_t('adm.col.company')}</th><th>${_t('adm.col.country')}</th><th>${_t('adm.col.region')}</th>
+        <th>${_t('adm.col.etd')}</th><th>${_t('adm.col.eta')}</th>
+        <th>${_t('adm.col.bl_no')}</th><th>${_t('adm.col.vessel')}</th>
+        <th>${_t('adm.col.special')}</th><th>${_t('adm.col.receive_status')}</th><th>${_t('adm.col.registrar')}</th><th>${_t('adm.col.registrar_office')}</th><th>${_t('adm.col.registered_at')}</th>
       </tr></thead>
       <tbody>
         ${allData.shipping.map(r => {
           const recv = r.received_at
             ? `<span style="color:#2e7d32">✓ ${esc(r.received_by_name||'')}<br><small>${fmtDate(r.received_at)}</small></span>`
-            : `<span style="color:#999">미수령</span>`;
+            : `<span style="color:#999">${_t('adm.col.not_received')}</span>`;
           return `
           <tr>
+            ${actionCell('shipping_status', r.id)}
             <td>${esc(r.company||'')}</td>
             <td>${esc(r.country)}</td>
             <td>${esc(r.region)}</td>
@@ -263,12 +563,451 @@
             <td class="wrap">${esc(r.submitter_office||'')}</td>
             <td>${fmtDate(r.created_at)}</td>
           </tr>`;
-        }).join('') || emptyRow(12)}
+        }).join('') || emptyRow(cols)}
       </tbody>`;
   }
 
   function emptyRow(cols) {
-    return `<tr><td colspan="${cols}" style="text-align:center; color:#999; padding:30px">아직 응답이 없습니다</td></tr>`;
+    return `<tr><td colspan="${cols}" style="text-align:center; color:#999; padding:30px">${_t('adm.col.no_response')}</td></tr>`;
+  }
+
+  /* ---------- 보고자료 (전년대비 비교표) ---------- */
+
+  // 셀 수량 포맷: 0은 '-', 아니면 콤마 숫자
+  function fmtQty(n) {
+    const v = Number(n || 0);
+    return v === 0 ? '-' : v.toLocaleString('ko-KR');
+  }
+  // 증감 셀: A - B (A=올해, B=작년). 감소는 빨간▼, 증가는 초록▲, 동일은 회색 '-'
+  function fmtDiff(a, b) {
+    const va = Number(a || 0), vb = Number(b || 0);
+    const d = va - vb;
+    if (d === 0) return `<span class="zero">-</span>`;
+    if (d > 0)  return `<span class="up">${d.toLocaleString('ko-KR')} ▲</span>`;
+    return `<span class="down">${Math.abs(d).toLocaleString('ko-KR')} ▼</span>`;
+  }
+  // 문장형 증감: "▲ 100부 증가" / "▼ 50부 감소" / "동일"
+  function diffText(a, b) {
+    const d = Number(a || 0) - Number(b || 0);
+    if (d === 0) return '동일';
+    if (d > 0)  return `<span class="up">▲${d.toLocaleString()}부 증가</span>`;
+    return `<span class="down">▼${Math.abs(d).toLocaleString()}부 감소</span>`;
+  }
+
+  // 연도별 신청 단위 환산 — 박스 단위 저장 연도는 * 25로 부수로 환산
+  function toCopies(qty, year) {
+    return year >= BOX_UNIT_FROM_YEAR ? Number(qty || 0) * COPIES_PER_BOX : Number(qty || 0);
+  }
+
+  // 감소 상위 N개 + 증가/신규 항목 인사이트 자동 생성
+  function pickInsights(rows) {
+    // rows: [{label, aJ, aH, bJ, bH}]
+    const withDiff = rows.map(r => ({
+      ...r,
+      diffJ: r.aJ - r.bJ,
+      diffH: r.aH - r.bH,
+      absMax: Math.max(Math.abs(r.aJ - r.bJ), Math.abs(r.aH - r.bH))
+    }));
+    // 감소 규모 상위 (장금 or 흥아 중 감소가 큰 순)
+    const decreases = withDiff
+      .filter(r => r.diffJ < 0 || r.diffH < 0)
+      .sort((a,b) => {
+        const av = Math.max(a.diffJ < 0 ? -a.diffJ : 0, a.diffH < 0 ? -a.diffH : 0);
+        const bv = Math.max(b.diffJ < 0 ? -b.diffJ : 0, b.diffH < 0 ? -b.diffH : 0);
+        return bv - av;
+      })
+      .slice(0, 3);
+    // 증가/신규
+    const increases = withDiff
+      .filter(r => r.diffJ > 0 || r.diffH > 0)
+      .sort((a,b) => (b.diffJ + b.diffH) - (a.diffJ + a.diffH));
+    return { decreases, increases };
+  }
+
+  function renderReport() {
+    const el = document.getElementById('report-content');
+    if (!el) return;
+
+    const yA = SURVEY_YEAR;
+    const yB = SURVEY_YEAR - 1;
+
+    // ----- 국내 -----
+    // v_yearly_domestic: (survey_year, division, team, jangkum_b_qty, heunga_b_qty)
+    // 올해 신청이 아직 없으면 히스토리 데이터로만 표시되므로 division/team 마스터를 기준으로 병합
+    const domA = new Map(), domB = new Map();  // key = "division|team"
+    (allData.yearlyDomestic || []).forEach(r => {
+      const k = `${r.division}|${r.team}`;
+      if (r.survey_year === yA) domA.set(k, r);
+      else if (r.survey_year === yB) domB.set(k, r);
+    });
+    // 표시 순서: DOMESTIC_ORG의 순서 우선. 마스터에 없는 팀은 뒤에 추가.
+    const seen = new Set();
+    const domKeys = [];
+    // DOMESTIC_ORG는 회사별 배열이지만 (division, team) 순서는 두 회사 통합
+    const orderedTeams = [];
+    Object.values(DOMESTIC_ORG).forEach(list => {
+      list.forEach(({division, team}) => {
+        const k = `${division}|${team}`;
+        if (!seen.has(k)) { seen.add(k); orderedTeams.push({division, team}); }
+      });
+    });
+    orderedTeams.forEach(({division, team}) => domKeys.push({division, team}));
+    // 마스터에 없지만 데이터에 있는 팀
+    [...domA.keys(), ...domB.keys()].forEach(k => {
+      if (!seen.has(k)) {
+        seen.add(k);
+        const [division, team] = k.split('|');
+        domKeys.push({division, team});
+      }
+    });
+
+    // 국내 표 데이터 수집 (렌더 후 인사이트에도 사용)
+    let sumAJ = 0, sumAH = 0, sumBJ = 0, sumBH = 0;
+    const domRowsData = [];
+    domKeys.forEach(({division, team}) => {
+      const k = `${division}|${team}`;
+      const a = domA.get(k) || {};
+      const b = domB.get(k) || {};
+      const aJ = toCopies(a.jangkum_b_qty, yA), aH = toCopies(a.heunga_b_qty, yA);
+      const bJ = toCopies(b.jangkum_b_qty, yB), bH = toCopies(b.heunga_b_qty, yB);
+      if (aJ === 0 && aH === 0 && bJ === 0 && bH === 0) return;
+      sumAJ += aJ; sumAH += aH; sumBJ += bJ; sumBH += bH;
+      domRowsData.push({division, team, label: team, aJ, aH, bJ, bH});
+    });
+
+    // 국내 표 렌더 (같은 division 그룹 첫 행에만 division 표시)
+    let lastDivision = null;
+    const domRows = domRowsData.map(({division, team, aJ, aH, bJ, bH}) => {
+      const divCell = (division !== lastDivision) ? `<td class="left group">${esc(division)}</td>` : `<td class="left"></td>`;
+      lastDivision = division;
+      return `<tr>
+        ${divCell}
+        <td class="left">${esc(team)}</td>
+        <td>${fmtQty(aJ)}</td><td>${fmtQty(aH)}</td>
+        <td>${fmtQty(bJ)}</td><td>${fmtQty(bH)}</td>
+        <td>${fmtDiff(aJ, bJ)}</td><td>${fmtDiff(aH, bH)}</td>
+      </tr>`;
+    }).join('');
+
+    const domInsight = pickInsights(domRowsData);
+    const domNoteItems = [];
+    domNoteItems.push(
+      `국내 합계 <b>장금 ${sumBJ.toLocaleString()} → ${sumAJ.toLocaleString()}부</b> (${diffText(sumAJ, sumBJ)}), ` +
+      `<b>흥아 ${sumBH.toLocaleString()} → ${sumAH.toLocaleString()}부</b> (${diffText(sumAH, sumBH)}).`
+    );
+    if (domInsight.decreases.length) {
+      const top = domInsight.decreases.slice(0, 3).map(r => {
+        const parts = [];
+        if (r.diffJ < 0) parts.push(`장금 ▼${Math.abs(r.diffJ).toLocaleString()}`);
+        if (r.diffH < 0) parts.push(`흥아 ▼${Math.abs(r.diffH).toLocaleString()}`);
+        return `${r.team}(${parts.join(' / ')})`;
+      }).join(', ');
+      domNoteItems.push(`감소 규모 상위: ${top}.`);
+    }
+    if (domInsight.increases.length) {
+      const inc = domInsight.increases.slice(0, 4).map(r => {
+        const parts = [];
+        if (r.diffJ > 0) parts.push(`장금 ▲${r.diffJ.toLocaleString()}`);
+        if (r.diffH > 0) parts.push(`흥아 ▲${r.diffH.toLocaleString()}`);
+        return `${r.team}(${parts.join(' / ')})`;
+      }).join(', ');
+      domNoteItems.push(`신규·증가 신청: ${inc}.`);
+    }
+
+    const domTable = `
+      <section class="report-section">
+        <div class="section-head">
+          <span class="section-num">01</span>
+          <h2 class="section-title">국내 신청현황</h2>
+          <span class="section-badge">단위: 부 · 전년 대비</span>
+        </div>
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th rowspan="2" class="left">구분</th>
+              <th rowspan="2" class="left">팀</th>
+              <th colspan="2">${yA}년 (A)</th>
+              <th colspan="2">${yB}년 (B)</th>
+              <th colspan="2">전년대비 (A-B)</th>
+            </tr>
+            <tr>
+              <th>장금</th><th>흥아</th>
+              <th>장금</th><th>흥아</th>
+              <th>장금</th><th>흥아</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${domRows || `<tr><td colspan="8" class="left" style="text-align:center; color:#999; padding:20px">데이터가 없습니다</td></tr>`}
+            <tr class="total">
+              <td class="left" colspan="2">국내 합계</td>
+              <td>${sumAJ.toLocaleString()}</td><td>${sumAH.toLocaleString()}</td>
+              <td>${sumBJ.toLocaleString()}</td><td>${sumBH.toLocaleString()}</td>
+              <td>${fmtDiff(sumAJ, sumBJ)}</td><td>${fmtDiff(sumAH, sumBH)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="report-legend">▲ 증가 &nbsp; ▼ 감소 &nbsp; - 해당없음</div>
+        <div class="report-notes">
+          <h4>국내 현황 요약</h4>
+          <ul>${domNoteItems.map(t => `<li>${t}</li>`).join('')}</ul>
+        </div>
+      </section>`;
+
+    // ----- 해외 -----
+    const ovA = new Map(), ovB = new Map();
+    (allData.yearlyOverseas || []).forEach(r => {
+      const k = `${r.country}|${r.region}`;
+      if (r.survey_year === yA) ovA.set(k, r);
+      else if (r.survey_year === yB) ovB.set(k, r);
+    });
+    // 표시 순서: OVERSEAS_REGIONS 우선, 데이터만 있는 것 뒤에.
+    const ovSeen = new Set();
+    const ovKeys = [];
+    OVERSEAS_REGIONS.forEach(r => {
+      const k = `${r.country}|${r.region}`;
+      if (!ovSeen.has(k)) { ovSeen.add(k); ovKeys.push({country: r.country, region: r.region}); }
+    });
+    [...ovA.keys(), ...ovB.keys()].forEach(k => {
+      if (!ovSeen.has(k)) {
+        ovSeen.add(k);
+        const [country, region] = k.split('|');
+        ovKeys.push({country, region});
+      }
+    });
+
+    // 해외 표 데이터 수집
+    let osAJ = 0, osAH = 0, osBJ = 0, osBH = 0;
+    const ovRowsData = [];
+    ovKeys.forEach(({country, region}) => {
+      const k = `${country}|${region}`;
+      const a = ovA.get(k) || {};
+      const b = ovB.get(k) || {};
+      const aJ = toCopies((a.jangkum_qty||0) + (a.yjc_jangkum_qty||0), yA);
+      const aH = toCopies((a.heunga_qty ||0) + (a.yjc_heunga_qty ||0), yA);
+      const bJ = toCopies((b.jangkum_qty||0) + (b.yjc_jangkum_qty||0), yB);
+      const bH = toCopies((b.heunga_qty ||0) + (b.yjc_heunga_qty ||0), yB);
+      if (aJ === 0 && aH === 0 && bJ === 0 && bH === 0) return;
+      osAJ += aJ; osAH += aH; osBJ += bJ; osBH += bH;
+      ovRowsData.push({country, region, label: `${country} ${region}`, aJ, aH, bJ, bH});
+    });
+
+    let lastCountry = null;
+    const ovRows = ovRowsData.map(({country, region, aJ, aH, bJ, bH}) => {
+      const countryCell = (country !== lastCountry) ? `<td class="left group">${esc(country)}</td>` : `<td class="left"></td>`;
+      lastCountry = country;
+      return `<tr>
+        ${countryCell}
+        <td class="left">${esc(region)}</td>
+        <td>${fmtQty(aJ)}</td><td>${fmtQty(aH)}</td>
+        <td>${fmtQty(bJ)}</td><td>${fmtQty(bH)}</td>
+        <td>${fmtDiff(aJ, bJ)}</td><td>${fmtDiff(aH, bH)}</td>
+      </tr>`;
+    }).join('');
+
+    const ovInsight = pickInsights(ovRowsData);
+    const ovNoteItems = [];
+    ovNoteItems.push(
+      `해외 합계 <b>장금 ${osBJ.toLocaleString()} → ${osAJ.toLocaleString()}부</b> (${diffText(osAJ, osBJ)}), ` +
+      `<b>흥아 ${osBH.toLocaleString()} → ${osAH.toLocaleString()}부</b> (${diffText(osAH, osBH)}).`
+    );
+    if (ovInsight.decreases.length) {
+      const top = ovInsight.decreases.slice(0, 3).map(r => {
+        const parts = [];
+        if (r.diffJ < 0) parts.push(`장금 ▼${Math.abs(r.diffJ).toLocaleString()}`);
+        if (r.diffH < 0) parts.push(`흥아 ▼${Math.abs(r.diffH).toLocaleString()}`);
+        return `${r.label}(${parts.join(' / ')})`;
+      }).join(', ');
+      ovNoteItems.push(`주요 감소 거점: ${top}.`);
+    }
+    if (ovInsight.increases.length) {
+      const inc = ovInsight.increases.slice(0, 4).map(r => {
+        const parts = [];
+        if (r.diffJ > 0) parts.push(`장금 ▲${r.diffJ.toLocaleString()}`);
+        if (r.diffH > 0) parts.push(`흥아 ▲${r.diffH.toLocaleString()}`);
+        return `${r.label}(${parts.join(' / ')})`;
+      }).join(', ');
+      ovNoteItems.push(`신규·증가 거점: ${inc}.`);
+    }
+
+    const ovTable = `
+      <section class="report-section page-break">
+        <div class="section-head">
+          <span class="section-num">02</span>
+          <h2 class="section-title">해외 신청현황</h2>
+          <span class="section-badge">단위: 부 · 전년 대비</span>
+        </div>
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th rowspan="2" class="left">국가</th>
+              <th rowspan="2" class="left">지역</th>
+              <th colspan="2">${yA}년 (A)</th>
+              <th colspan="2">${yB}년 (B)</th>
+              <th colspan="2">전년대비 (A-B)</th>
+            </tr>
+            <tr>
+              <th>장금</th><th>흥아</th>
+              <th>장금</th><th>흥아</th>
+              <th>장금</th><th>흥아</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${ovRows || `<tr><td colspan="8" class="left" style="text-align:center; color:#999; padding:20px">데이터가 없습니다</td></tr>`}
+            <tr class="total">
+              <td class="left" colspan="2">해외 합계</td>
+              <td>${osAJ.toLocaleString()}</td><td>${osAH.toLocaleString()}</td>
+              <td>${osBJ.toLocaleString()}</td><td>${osBH.toLocaleString()}</td>
+              <td>${fmtDiff(osAJ, osBJ)}</td><td>${fmtDiff(osAH, osBH)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="report-legend">▲ 증가 &nbsp; ▼ 감소 &nbsp; - 해당없음 &nbsp;|&nbsp; 해외 수량은 기본 + YJC 합산 기준</div>
+        <div class="report-notes">
+          <h4>해외 현황 요약</h4>
+          <ul>${ovNoteItems.map(t => `<li>${t}</li>`).join('')}</ul>
+        </div>
+      </section>`;
+
+    // ----- 03 전체 종합 -----
+    const totAJ = sumAJ + osAJ, totAH = sumAH + osAH;
+    const totBJ = sumBJ + osBJ, totBH = sumBH + osBH;
+    const totA = totAJ + totAH, totB = totBJ + totBH;
+
+    // 백분율 계산
+    function pctChange(a, b) {
+      if (!b) return '';
+      const p = Math.round(Math.abs(a - b) / b * 1000) / 10;
+      return `${p}%`;
+    }
+    function summaryCard(label, aTot, bTot) {
+      const diff = aTot - bTot;
+      const dir  = diff === 0 ? '' : (diff > 0 ? 'up' : 'down');
+      const arrow = diff === 0 ? '' : (diff > 0 ? '▲' : '▼');
+      const diffLine = diff === 0
+        ? `<div class="card-diff neutral">동일</div>`
+        : `<div class="card-diff ${dir}">${arrow} ${Math.abs(diff).toLocaleString()}부 · ${pctChange(aTot, bTot)}</div>`;
+      return `<div class="summary-card">
+        <div class="card-label">${label}</div>
+        <div class="card-value"><b>${aTot.toLocaleString()}</b><span class="unit">부</span></div>
+        <div class="card-prev">전년 ${bTot.toLocaleString()}부 대비</div>
+        ${diffLine}
+      </div>`;
+    }
+
+    // 종합 시사점 자동 문구
+    const overallDiff = (totA - totB);
+    const overallPct = totB ? Math.round(Math.abs(overallDiff) / totB * 1000) / 10 : 0;
+    const dirWord = overallDiff < 0 ? '감소' : (overallDiff > 0 ? '증가' : '동일');
+    const noteImpl = [];
+    if (totB > 0) {
+      noteImpl.push(
+        `양사 신청수량은 전년 대비 <b>${overallPct}% ${dirWord}</b>` +
+        (overallDiff !== 0
+          ? `하여, ${yA}년 달력 제작·배포 물량을 조정 필요.`
+          : `.`)
+      );
+    }
+    if (osAJ + osAH < osBJ + osBH) {
+      const ovDropJ = osBJ - osAJ, ovDropH = osBH - osAH;
+      noteImpl.push(
+        `감소는 <b>해외 거점(장금 ▼${Math.max(0, ovDropJ).toLocaleString()} / 흥아 ▼${Math.max(0, ovDropH).toLocaleString()})</b>` +
+        `에 집중되어, 해외 배포 정책 변경 여부를 확인·반영할 필요.`
+      );
+    }
+    if (sumAJ + sumAH < sumBJ + sumBH) {
+      noteImpl.push(
+        `국내에서도 대량 신청 부서의 수요가 축소되어, 잔여 신청은 소규모 실수요 중심으로 재편.`
+      );
+    }
+    const incAll = [...(domInsight.increases||[]), ...(ovInsight.increases||[])];
+    if (incAll.length) {
+      noteImpl.push(`신규·증가 신청 (${incAll.slice(0,3).map(r => r.label).join(', ')} 등)은 별도 확인 후 확정 물량에 반영 권장.`);
+    }
+
+    const totalTable = `
+      <section class="report-section page-break">
+        <div class="section-head">
+          <span class="section-num">03</span>
+          <h2 class="section-title">전체 종합 및 시사점</h2>
+          <span class="section-badge">국내 + 해외 · 단위: 부</span>
+        </div>
+        <table class="report-table compact">
+          <thead>
+            <tr>
+              <th rowspan="2" class="left">구분</th>
+              <th colspan="2">${yA}년</th>
+              <th colspan="2">${yB}년</th>
+              <th colspan="2">전년대비 (A-B)</th>
+            </tr>
+            <tr>
+              <th>장금</th><th>흥아</th>
+              <th>장금</th><th>흥아</th>
+              <th>장금</th><th>흥아</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="left group">국내 합계</td>
+              <td>${sumAJ.toLocaleString()}</td><td>${sumAH.toLocaleString()}</td>
+              <td>${sumBJ.toLocaleString()}</td><td>${sumBH.toLocaleString()}</td>
+              <td>${fmtDiff(sumAJ, sumBJ)}</td><td>${fmtDiff(sumAH, sumBH)}</td>
+            </tr>
+            <tr>
+              <td class="left group">해외 합계</td>
+              <td>${osAJ.toLocaleString()}</td><td>${osAH.toLocaleString()}</td>
+              <td>${osBJ.toLocaleString()}</td><td>${osBH.toLocaleString()}</td>
+              <td>${fmtDiff(osAJ, osBJ)}</td><td>${fmtDiff(osAH, osBH)}</td>
+            </tr>
+            <tr class="total">
+              <td class="left">전체 합계</td>
+              <td>${totAJ.toLocaleString()}</td><td>${totAH.toLocaleString()}</td>
+              <td>${totBJ.toLocaleString()}</td><td>${totBH.toLocaleString()}</td>
+              <td>${fmtDiff(totAJ, totBJ)}</td><td>${fmtDiff(totAH, totBH)}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="summary-cards">
+          ${summaryCard('장금상선 총계', totAJ, totBJ)}
+          ${summaryCard('흥아라인 총계', totAH, totBH)}
+          ${summaryCard('양사 합산 총계', totA, totB)}
+        </div>
+
+        <div class="report-notes">
+          <h4>종합 시사점</h4>
+          <ul>${noteImpl.map(t => `<li>${t}</li>`).join('')}</ul>
+        </div>
+      </section>`;
+
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}. ${today.getMonth()+1}. ${today.getDate()}.`;
+
+    el.innerHTML = `
+      <header class="report-header">
+        <div class="report-tagline">${yA} CALENDAR ORDER REPORT</div>
+        <h1 class="report-title">${yA}년 달력 신청수량 보고자료</h1>
+        <div class="report-subtitle">국내·해외 신청현황 및 전년대비 분석</div>
+        <div class="report-meta">
+          보고대상 <b>임원</b> · 작성 <b>장금상선 · 흥아라인 총무팀</b> · 작성일 <b>${todayStr}</b>
+        </div>
+      </header>
+      ${domTable}
+      ${ovTable}
+      ${totalTable}
+    `;
+  }
+
+  // 인쇄 버튼
+  const printBtn = document.getElementById('report-print');
+  if (printBtn) {
+    printBtn.addEventListener('click', () => {
+      // 다른 탭이 활성 상태면 보고 탭으로 강제 전환
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
+      document.querySelector('.tab[data-tab="report"]').classList.add('active');
+      document.getElementById('panel-report').classList.add('active');
+      window.print();
+    });
   }
 
   function esc(s) {
@@ -532,7 +1271,7 @@
 ${sections}
 
 <div style="margin-top:40px; text-align:right; color:#888; font-size:11px">
-  생성: ${new Date().toLocaleString('ko-KR')} · ${rows.length}건 · 시노코 그룹 총무팀
+  생성: ${new Date().toLocaleString('ko-KR')} · ${rows.length}건 · 장금상선, 흥아라인
 </div>
 
 </body></html>`;
@@ -680,6 +1419,18 @@ ${sections}
   }
 
   NET_COMPANIES.forEach(setupNetworkImageUpload);
+
+  // 언어 전환 시 동적 렌더된 테이블/요약을 다시 그림
+  document.addEventListener('langchange', () => {
+    renderDomestic();
+    renderOverseas();
+    renderDetail();
+    renderHoliday();
+    renderNetwork();
+    renderShipping();
+    renderSummary();
+    renderReport();
+  });
 
   // 초기 진입 — 인증 없이 바로 데이터 로드
   loadAll();

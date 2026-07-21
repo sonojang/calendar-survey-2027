@@ -179,7 +179,7 @@
   }
   // 액션 컬럼 헤더 — 로그인 시에만 표시
   function actionHeader() {
-    return isAdmin ? '<th class="col-actions">액션</th>' : '';
+    return isAdmin ? `<th class="col-actions">${_t('adm.col.action')}</th>` : '';
   }
 
   function openEditModal(table, row) {
@@ -363,23 +363,26 @@
     // 회사별 국내 응답 건수
     const domByCo = {};
     allData.domestic.forEach(r => {
-      const k = r.company || '미지정';
+      const k = r.company || _t('adm.sum.unspecified');
       domByCo[k] = (domByCo[k] || 0) + 1;
     });
     const domBreakdown = Object.entries(domByCo).map(([k,v]) => `${k} ${v}`).join(' / ') || '0';
 
+    const rowsUnit   = _t('adm.sum.rows');
+    const copiesUnit = _t('adm.sum.copies');
+
     document.getElementById('stats-summary').innerHTML = `
       <div class="alert alert-info">
-        <b>응답 현황</b> &nbsp;|&nbsp;
-        국내 ${allData.domestic.length}건 (${domBreakdown}) — 장금B ${sumDomJ.toLocaleString()} · 흥아B ${sumDomH.toLocaleString()}
+        <b>${_t('adm.sum.title')}</b> &nbsp;|&nbsp;
+        ${_t('adm.sum.domestic')} ${allData.domestic.length}${rowsUnit} (${domBreakdown}) — ${_t('adm.col.jangkum_b')} ${sumDomJ.toLocaleString()} · ${_t('adm.col.heunga_b')} ${sumDomH.toLocaleString()}
         &nbsp;|&nbsp;
-        해외 ${allData.overseas.length}건 (장금 ${sumOvJ.toLocaleString()} · 흥아 ${sumOvH.toLocaleString()})
+        ${_t('adm.sum.overseas')} ${allData.overseas.length}${rowsUnit} (${_t('adm.col.jangkum')} ${sumOvJ.toLocaleString()} · ${_t('adm.col.heunga')} ${sumOvH.toLocaleString()})
         &nbsp;|&nbsp;
-        세부포트 ${allData.detail.length}건 (${sumDetail.toLocaleString()}부)
+        ${_t('adm.sum.detail')} ${allData.detail.length}${rowsUnit} (${sumDetail.toLocaleString()}${copiesUnit})
         &nbsp;|&nbsp;
-        공휴일 ${allData.holiday.length}건
+        ${_t('adm.sum.holiday')} ${allData.holiday.length}${rowsUnit}
         &nbsp;|&nbsp;
-        네트워크 변경 ${allData.network.length}건
+        ${_t('adm.sum.network')} ${allData.network.length}${rowsUnit}
       </div>`;
   }
 
@@ -391,9 +394,9 @@
     t.innerHTML = `
       <thead><tr>
         ${actionHeader()}
-        <th>회사</th><th>본부</th><th>팀</th>
-        <th class="num">장금B</th><th class="num">흥아B</th>
-        <th>입력자</th><th>이메일</th><th>비고</th><th>제출시각</th>
+        <th>${_t('adm.col.company')}</th><th>${_t('adm.col.division')}</th><th>${_t('adm.col.team')}</th>
+        <th class="num">${_t('adm.col.jangkum_b')}</th><th class="num">${_t('adm.col.heunga_b')}</th>
+        <th>${_t('adm.col.submitter')}</th><th>${_t('adm.col.email')}</th><th>${_t('adm.col.note')}</th><th>${_t('adm.col.submitted_at')}</th>
       </tr></thead>
       <tbody>
         ${allData.domestic.map(r => `
@@ -418,11 +421,11 @@
     t.innerHTML = `
       <thead><tr>
         ${actionHeader()}
-        <th>신청회사</th><th>국가</th><th>지역</th><th>타입</th>
-        <th class="num">장금</th><th class="num">흥아</th>
-        <th class="num">YJC장금</th><th class="num">YJC흥아</th>
-        <th>배송방법</th><th>Port</th><th>담당자</th><th>연락처</th>
-        <th>주소</th><th>비고</th><th>입력자</th><th>입력자 소속</th><th>제출시각</th>
+        <th>${_t('adm.col.company_req')}</th><th>${_t('adm.col.country')}</th><th>${_t('adm.col.region')}</th><th>${_t('adm.col.type')}</th>
+        <th class="num">${_t('adm.col.jangkum')}</th><th class="num">${_t('adm.col.heunga')}</th>
+        <th class="num">${_t('adm.col.yjc_jangkum')}</th><th class="num">${_t('adm.col.yjc_heunga')}</th>
+        <th>${_t('adm.col.ship_method')}</th><th>${_t('adm.col.port')}</th><th>${_t('adm.col.pic')}</th><th>${_t('adm.col.contact')}</th>
+        <th>${_t('adm.col.address')}</th><th>${_t('adm.col.note')}</th><th>${_t('adm.col.submitter')}</th><th>${_t('adm.col.submitter_office')}</th><th>${_t('adm.col.submitted_at')}</th>
       </tr></thead>
       <tbody>
         ${allData.overseas.map(r => `
@@ -455,9 +458,9 @@
     t.innerHTML = `
       <thead><tr>
         ${actionHeader()}
-        <th>국가</th><th>지역</th><th>Port</th>
-        <th class="num">수량</th><th>배송처 사명</th><th>주소</th>
-        <th>입력자</th><th>입력자 소속</th><th>제출시각</th>
+        <th>${_t('adm.col.country')}</th><th>${_t('adm.col.region')}</th><th>${_t('adm.col.port')}</th>
+        <th class="num">${_t('adm.col.qty')}</th><th>${_t('adm.col.company_ship')}</th><th>${_t('adm.col.address')}</th>
+        <th>${_t('adm.col.submitter')}</th><th>${_t('adm.col.submitter_office')}</th><th>${_t('adm.col.submitted_at')}</th>
       </tr></thead>
       <tbody>
         ${allData.detail.map(r => `
@@ -482,8 +485,8 @@
     t.innerHTML = `
       <thead><tr>
         ${actionHeader()}
-        <th>국가</th><th>날짜</th><th>요일</th><th>공휴일명 (EN)</th>
-        <th>입력자</th><th>입력자 소속</th><th>제출시각</th>
+        <th>${_t('adm.col.country')}</th><th>${_t('adm.col.date')}</th><th>${_t('adm.col.weekday')}</th><th>${_t('adm.col.holiday_en')}</th>
+        <th>${_t('adm.col.submitter')}</th><th>${_t('adm.col.submitter_office')}</th><th>${_t('adm.col.submitted_at')}</th>
       </tr></thead>
       <tbody>
         ${allData.holiday.map(r => `
@@ -506,9 +509,9 @@
     t.innerHTML = `
       <thead><tr>
         ${actionHeader()}
-        <th>국가</th><th>지점/사무소</th><th>변경항목</th>
-        <th>기존값</th><th>변경값</th><th>메모</th>
-        <th>입력자</th><th>입력자 소속</th><th>제출시각</th>
+        <th>${_t('adm.col.country')}</th><th>${_t('adm.col.branch')}</th><th>${_t('adm.col.change_field')}</th>
+        <th>${_t('adm.col.old_value')}</th><th>${_t('adm.col.new_value')}</th><th>${_t('adm.col.memo')}</th>
+        <th>${_t('adm.col.submitter')}</th><th>${_t('adm.col.submitter_office')}</th><th>${_t('adm.col.submitted_at')}</th>
       </tr></thead>
       <tbody>
         ${allData.network.map(r => `
@@ -534,16 +537,16 @@
     t.innerHTML = `
       <thead><tr>
         ${actionHeader()}
-        <th>회사</th><th>국가</th><th>지역</th>
-        <th>ETD</th><th>ETA</th>
-        <th>BL 번호</th><th>선박명</th>
-        <th>특이사항</th><th>수령상태</th><th>등록자</th><th>등록자 소속</th><th>등록시각</th>
+        <th>${_t('adm.col.company')}</th><th>${_t('adm.col.country')}</th><th>${_t('adm.col.region')}</th>
+        <th>${_t('adm.col.etd')}</th><th>${_t('adm.col.eta')}</th>
+        <th>${_t('adm.col.bl_no')}</th><th>${_t('adm.col.vessel')}</th>
+        <th>${_t('adm.col.special')}</th><th>${_t('adm.col.receive_status')}</th><th>${_t('adm.col.registrar')}</th><th>${_t('adm.col.registrar_office')}</th><th>${_t('adm.col.registered_at')}</th>
       </tr></thead>
       <tbody>
         ${allData.shipping.map(r => {
           const recv = r.received_at
             ? `<span style="color:#2e7d32">✓ ${esc(r.received_by_name||'')}<br><small>${fmtDate(r.received_at)}</small></span>`
-            : `<span style="color:#999">미수령</span>`;
+            : `<span style="color:#999">${_t('adm.col.not_received')}</span>`;
           return `
           <tr>
             ${actionCell('shipping_status', r.id)}
@@ -565,7 +568,7 @@
   }
 
   function emptyRow(cols) {
-    return `<tr><td colspan="${cols}" style="text-align:center; color:#999; padding:30px">아직 응답이 없습니다</td></tr>`;
+    return `<tr><td colspan="${cols}" style="text-align:center; color:#999; padding:30px">${_t('adm.col.no_response')}</td></tr>`;
   }
 
   /* ---------- 보고자료 (전년대비 비교표) ---------- */
@@ -1416,6 +1419,18 @@ ${sections}
   }
 
   NET_COMPANIES.forEach(setupNetworkImageUpload);
+
+  // 언어 전환 시 동적 렌더된 테이블/요약을 다시 그림
+  document.addEventListener('langchange', () => {
+    renderDomestic();
+    renderOverseas();
+    renderDetail();
+    renderHoliday();
+    renderNetwork();
+    renderShipping();
+    renderSummary();
+    renderReport();
+  });
 
   // 초기 진입 — 인증 없이 바로 데이터 로드
   loadAll();
